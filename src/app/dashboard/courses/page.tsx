@@ -1,16 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { BookOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { EnrolledCourseCard } from "@/components/dashboard/EnrolledCourseCard";
-import {
-  getActiveEnrollments,
-  getCompletedEnrollments,
-  SAMPLE_USER_ID,
-} from "@/data/sample-enrollments";
+import type { EnrollmentWithCourse } from "@/types";
 
 function EmptyState({ message }: { message: string }) {
   return (
@@ -25,11 +21,30 @@ function EmptyState({ message }: { message: string }) {
 }
 
 export default function MyCoursesPage() {
-  const { data: session } = useSession();
-  const userId = session?.user?.id || SAMPLE_USER_ID;
+  const [enrollments, setEnrollments] = useState<EnrollmentWithCourse[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const activeEnrollments = getActiveEnrollments(userId);
-  const completedEnrollments = getCompletedEnrollments(userId);
+  useEffect(() => {
+    fetch("/api/enrollments")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setEnrollments(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const activeEnrollments = enrollments.filter((e) => e.status === "active");
+  const completedEnrollments = enrollments.filter((e) => e.status === "completed");
+
+  if (loading) {
+    return (
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight mb-6">My Courses</h1>
+        <p className="text-muted-foreground">Loading your courses...</p>
+      </div>
+    );
+  }
 
   return (
     <div>

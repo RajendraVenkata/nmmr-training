@@ -23,11 +23,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import type { SampleCourse } from "@/data/sample-courses";
-import { getEnrollmentCountForCourse } from "@/data/sample-admin";
+import type { AdminCourseItem } from "@/types";
 
 interface CourseTableProps {
-  courses: SampleCourse[];
+  courses: AdminCourseItem[];
 }
 
 const statusColors: Record<string, string> = {
@@ -35,10 +34,6 @@ const statusColors: Record<string, string> = {
   draft: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
   archived: "bg-gray-500/10 text-gray-600 dark:text-gray-400",
 };
-
-function getLessonsCount(course: SampleCourse) {
-  return course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
-}
 
 export function CourseTable({ courses }: CourseTableProps) {
   const [search, setSearch] = useState("");
@@ -55,10 +50,18 @@ export function CourseTable({ courses }: CourseTableProps) {
   const courseToDelete = courses.find((c) => c.id === deleteId);
 
   function handleDelete() {
-    toast({
-      title: "Course deleted",
-      description: `"${courseToDelete?.title}" has been deleted.`,
-    });
+    if (!deleteId) return;
+    fetch(`/api/admin/courses/${deleteId}`, { method: "DELETE" })
+      .then((res) => {
+        if (res.ok) {
+          toast({
+            title: "Course deleted",
+            description: `"${courseToDelete?.title}" has been deleted.`,
+          });
+          window.location.reload();
+        }
+      })
+      .catch(() => {});
     setDeleteId(null);
   }
 
@@ -83,14 +86,13 @@ export function CourseTable({ courses }: CourseTableProps) {
               <TableHead>Status</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Lessons</TableHead>
-              <TableHead>Enrollments</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No courses found.
                 </TableCell>
               </TableRow>
@@ -123,10 +125,7 @@ export function CourseTable({ courses }: CourseTableProps) {
                       : `₹${course.price.toLocaleString("en-IN")}`}
                   </TableCell>
                   <TableCell className="text-sm">
-                    {getLessonsCount(course)}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {getEnrollmentCountForCourse(course.id)}
+                    {course.lessonsCount}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">

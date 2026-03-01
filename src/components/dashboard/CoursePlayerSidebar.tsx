@@ -10,10 +10,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import type { SampleCourse } from "@/data/sample-courses";
+import type { CourseDetail } from "@/types";
 
 interface CoursePlayerSidebarProps {
-  course: SampleCourse;
+  course: CourseDetail;
   currentLessonId: string;
   completedLessons: Set<string>;
   onSelectLesson: (lessonId: string) => void;

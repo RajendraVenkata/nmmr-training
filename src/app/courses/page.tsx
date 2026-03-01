@@ -1,25 +1,35 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { CourseSearch } from "@/components/courses/CourseSearch";
 import { CourseFilters } from "@/components/courses/CourseFilters";
-import { getPublishedCourses, getLessonsCount } from "@/data/sample-courses";
+import type { PublicCourseItem } from "@/types";
 
 export default function CoursesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
+  const [courses, setCourses] = useState<PublicCourseItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const allCourses = getPublishedCourses();
+  useEffect(() => {
+    fetch("/api/courses")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setCourses(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredCourses = useMemo(() => {
-    let courses = allCourses;
+    let result = courses;
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      courses = courses.filter(
+      result = result.filter(
         (c) =>
           c.title.toLowerCase().includes(q) ||
           c.description.toLowerCase().includes(q) ||
@@ -29,15 +39,15 @@ export default function CoursesPage() {
     }
 
     if (selectedCategory) {
-      courses = courses.filter((c) => c.category === selectedCategory);
+      result = result.filter((c) => c.category === selectedCategory);
     }
 
     if (selectedDifficulty) {
-      courses = courses.filter((c) => c.difficulty === selectedDifficulty);
+      result = result.filter((c) => c.difficulty === selectedDifficulty);
     }
 
-    return courses;
-  }, [allCourses, searchQuery, selectedCategory, selectedDifficulty]);
+    return result;
+  }, [courses, searchQuery, selectedCategory, selectedDifficulty]);
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -56,7 +66,11 @@ export default function CoursesPage() {
         />
       </div>
 
-      {filteredCourses.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-16">
+          <p className="text-lg text-muted-foreground">Loading courses...</p>
+        </div>
+      ) : filteredCourses.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-lg text-muted-foreground">
             No courses found matching your criteria.
@@ -83,7 +97,7 @@ export default function CoursesPage() {
                 difficulty={course.difficulty}
                 duration={course.duration}
                 instructor={course.instructor}
-                lessonsCount={getLessonsCount(course)}
+                lessonsCount={course.lessonsCount}
               />
             ))}
           </div>

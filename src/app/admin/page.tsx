@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PlusCircle, Users, ArrowRight } from "lucide-react";
 import { AdminStats } from "@/components/admin/AdminStats";
@@ -20,11 +21,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getAdminStats, getRecentEnrollments } from "@/data/sample-admin";
+import type { AdminDashboardStats, AdminRecentEnrollment } from "@/types";
 
 export default function AdminDashboardPage() {
-  const stats = getAdminStats();
-  const recentEnrollments = getRecentEnrollments(5);
+  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
+  const [recentEnrollments, setRecentEnrollments] = useState<AdminRecentEnrollment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/stats")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.stats) setStats(data.stats);
+        if (Array.isArray(data.recentEnrollments))
+          setRecentEnrollments(data.recentEnrollments);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -51,7 +65,11 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      <AdminStats stats={stats} />
+      {loading ? (
+        <p className="text-muted-foreground">Loading stats...</p>
+      ) : stats ? (
+        <AdminStats stats={stats} />
+      ) : null}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -66,54 +84,60 @@ export default function AdminDashboardPage() {
           </Button>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Progress</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentEnrollments.map((enrollment) => (
-                <TableRow key={enrollment.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-sm">
-                        {enrollment.userName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {enrollment.userEmail}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {enrollment.courseTitle}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(enrollment.enrolledAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {enrollment.progress}%
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        enrollment.status === "completed"
-                          ? "default"
-                          : "secondary"
-                      }
-                      className="capitalize text-xs"
-                    >
-                      {enrollment.status}
-                    </Badge>
-                  </TableCell>
+          {loading ? (
+            <p className="text-muted-foreground text-sm">Loading...</p>
+          ) : recentEnrollments.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No enrollments yet.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Course</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Progress</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {recentEnrollments.map((enrollment) => (
+                  <TableRow key={enrollment.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-sm">
+                          {enrollment.userName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {enrollment.userEmail}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {enrollment.courseTitle}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {enrollment.progress}%
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          enrollment.status === "completed"
+                            ? "default"
+                            : "secondary"
+                        }
+                        className="capitalize text-xs"
+                      >
+                        {enrollment.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

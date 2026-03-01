@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Menu } from "lucide-react";
@@ -13,22 +12,33 @@ import {
 } from "@/components/ui/sheet";
 import { CoursePlayerSidebar } from "@/components/dashboard/CoursePlayerSidebar";
 import { LessonContent } from "@/components/dashboard/LessonContent";
-import { getCourseBySlug } from "@/data/sample-courses";
-import {
-  getEnrollmentByUserAndCourse,
-  SAMPLE_USER_ID,
-} from "@/data/sample-enrollments";
-import { getLessonContent } from "@/data/sample-lesson-content";
+import type { CourseDetail, EnrollmentWithCourse } from "@/types";
 
 export default function CoursePlayerPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const { data: session } = useSession();
-  const userId = session?.user?.id || SAMPLE_USER_ID;
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [enrollment, setEnrollment] = useState<EnrollmentWithCourse | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const course = getCourseBySlug(slug);
-  const enrollment = getEnrollmentByUserAndCourse(userId, slug);
+  useEffect(() => {
+    Promise.all([
+      fetch(`/api/courses/${slug}`).then((r) => r.json()),
+      fetch("/api/enrollments").then((r) => r.json()),
+    ])
+      .then(([courseData, enrollmentsData]) => {
+        if (courseData && !courseData.error) setCourse(courseData);
+        if (Array.isArray(enrollmentsData)) {
+          const found = enrollmentsData.find(
+            (e: EnrollmentWithCourse) => e.courseSlug === slug
+          );
+          if (found) setEnrollment(found);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [slug]);
 
   const allLessons = useMemo(() => {
     if (!course) return [];
@@ -58,6 +68,19 @@ export default function CoursePlayerPage() {
     new Set(enrollment?.completedLessons || [])
   );
 
+  // Sync initialLessonId once data is loaded
+  useEffect(() => {
+    if (initialLessonId && !currentLessonId) {
+      setCurrentLessonId(initialLessonId);
+    }
+  }, [initialLessonId, currentLessonId]);
+
+  useEffect(() => {
+    if (enrollment) {
+      setCompletedLessons(new Set(enrollment.completedLessons || []));
+    }
+  }, [enrollment]);
+
   const currentLessonIndex = allLessons.findIndex(
     (l) => l.id === currentLessonId
   );
@@ -74,7 +97,16 @@ export default function CoursePlayerPage() {
       next.add(currentLessonId);
       return next;
     });
-  }, [currentLessonId]);
+
+    // Persist to API
+    if (enrollment) {
+      fetch(`/api/enrollments/${enrollment.id}/progress`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lessonId: currentLessonId, action: "complete" }),
+      }).catch(() => {});
+    }
+  }, [currentLessonId, enrollment]);
 
   const handleSelectLesson = useCallback(
     (lessonId: string) => {
@@ -93,6 +125,14 @@ export default function CoursePlayerPage() {
     currentLessonIndex > 0
       ? () => setCurrentLessonId(allLessons[currentLessonIndex - 1].id)
       : null;
+
+  if (loading) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-muted-foreground">Loading course...</p>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -165,7 +205,7 @@ export default function CoursePlayerPage() {
         {currentLesson && (
           <LessonContent
             lesson={currentLesson}
-            content={getLessonContent(currentLesson.id)}
+            content={currentLesson.content || ""}
             isCompleted={completedLessons.has(currentLessonId)}
             onMarkComplete={handleMarkComplete}
             onNext={handleNext}

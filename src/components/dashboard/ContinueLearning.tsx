@@ -10,10 +10,10 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import type { SampleEnrollment } from "@/data/sample-enrollments";
+import type { EnrollmentWithCourse } from "@/types";
 
 interface ContinueLearningProps {
-  enrollment: SampleEnrollment | undefined;
+  enrollment: EnrollmentWithCourse | undefined;
 }
 
 export function ContinueLearning({ enrollment }: ContinueLearningProps) {

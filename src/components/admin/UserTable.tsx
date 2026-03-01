@@ -22,16 +22,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import type { SampleUser } from "@/data/sample-users";
+import type { AdminUserItem } from "@/types";
 import type { UserRole } from "@/types";
 
 interface UserTableProps {
-  users: SampleUser[];
+  users: AdminUserItem[];
 }
 
 export function UserTable({ users }: UserTableProps) {
   const [search, setSearch] = useState("");
-  const [roleChangeUser, setRoleChangeUser] = useState<SampleUser | null>(null);
+  const [roleChangeUser, setRoleChangeUser] = useState<AdminUserItem | null>(null);
   const { toast } = useToast();
 
   const filtered = users.filter(
@@ -45,10 +45,22 @@ export function UserTable({ users }: UserTableProps) {
     if (!roleChangeUser) return;
     const newRole: UserRole =
       roleChangeUser.role === "admin" ? "learner" : "admin";
-    toast({
-      title: "Role updated",
-      description: `${roleChangeUser.name} is now ${newRole === "admin" ? "an admin" : "a learner"}.`,
-    });
+
+    fetch(`/api/admin/users/${roleChangeUser.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: newRole }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          toast({
+            title: "Role updated",
+            description: `${roleChangeUser.name} is now ${newRole === "admin" ? "an admin" : "a learner"}.`,
+          });
+          window.location.reload();
+        }
+      })
+      .catch(() => {});
     setRoleChangeUser(null);
   }
 

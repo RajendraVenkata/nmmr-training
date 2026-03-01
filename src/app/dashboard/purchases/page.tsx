@@ -1,7 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { Receipt } from "lucide-react";
 import {
   Table,
@@ -13,13 +13,22 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getEnrollmentsForUser, SAMPLE_USER_ID } from "@/data/sample-enrollments";
 import { formatDate, formatPrice } from "@/lib/utils";
+import type { EnrollmentWithCourse } from "@/types";
 
 export default function PurchasesPage() {
-  const { data: session } = useSession();
-  const userId = session?.user?.id || SAMPLE_USER_ID;
-  const enrollments = getEnrollmentsForUser(userId);
+  const [enrollments, setEnrollments] = useState<EnrollmentWithCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/enrollments")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setEnrollments(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const sorted = [...enrollments].sort(
     (a, b) =>
@@ -35,12 +44,12 @@ export default function PurchasesPage() {
         View your course enrollments and purchase records.
       </p>
 
-      {sorted.length === 0 ? (
+      {loading ? (
+        <p className="text-muted-foreground">Loading purchases...</p>
+      ) : sorted.length === 0 ? (
         <div className="text-center py-12">
           <Receipt className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground mb-4">
-            No purchases yet.
-          </p>
+          <p className="text-muted-foreground mb-4">No purchases yet.</p>
           <Button asChild>
             <Link href="/courses">Browse Courses</Link>
           </Button>

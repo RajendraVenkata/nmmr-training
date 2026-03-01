@@ -1,10 +1,22 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { UserTable } from "@/components/admin/UserTable";
-import { getAllUsers } from "@/data/sample-users";
+import type { AdminUserItem } from "@/types";
 
 export default function AdminUsersPage() {
-  const users = getAllUsers();
+  const [users, setUsers] = useState<AdminUserItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/users")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setUsers(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -15,7 +27,11 @@ export default function AdminUsersPage() {
         </p>
       </div>
 
-      <UserTable users={users} />
+      {loading ? (
+        <p className="text-muted-foreground">Loading users...</p>
+      ) : (
+        <UserTable users={users} />
+      )}
     </div>
   );
 }

@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ModuleEditor } from "@/components/admin/ModuleEditor";
-import { sampleCourses } from "@/data/sample-courses";
 import type { ModuleFormData, LessonFormData } from "@/lib/validators";
 
 interface LessonState {
@@ -26,6 +25,24 @@ interface ModuleState {
   lessons: LessonState[];
 }
 
+interface CourseData {
+  _id: string;
+  title: string;
+  modules: {
+    _id: string;
+    title: string;
+    order: number;
+    lessons: {
+      _id: string;
+      title: string;
+      type: "video" | "document" | "quiz" | "markdown";
+      duration: string;
+      order: number;
+      isFree: boolean;
+    }[];
+  }[];
+}
+
 let nextModuleId = 100;
 let nextLessonId = 1000;
 
@@ -35,18 +52,57 @@ export default function ContentManagementPage({
   params: { id: string };
 }) {
   const { id } = params;
-  const course = sampleCourses.find((c) => c.id === id);
   const { toast } = useToast();
+  const [course, setCourse] = useState<CourseData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  const [modules, setModules] = useState<ModuleState[]>(
-    () =>
-      course?.modules.map((m) => ({
-        ...m,
-        lessons: m.lessons.map((l) => ({ ...l })),
-      })) || []
-  );
+  const [modules, setModules] = useState<ModuleState[]>([]);
 
-  if (!course) {
+  useEffect(() => {
+    fetch(`/api/admin/courses/${id}`)
+      .then((res) => {
+        if (!res.ok) {
+          setNotFound(true);
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data && !data.error) {
+          setCourse(data);
+          setModules(
+            (data.modules || []).map(
+              (m: CourseData["modules"][number]) => ({
+                id: m._id,
+                title: m.title,
+                order: m.order,
+                lessons: (m.lessons || []).map((l) => ({
+                  id: l._id,
+                  title: l.title,
+                  type: l.type,
+                  duration: l.duration,
+                  order: l.order,
+                  isFree: l.isFree,
+                })),
+              })
+            )
+          );
+        }
+      })
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <p className="text-muted-foreground">Loading course content...</p>
+      </div>
+    );
+  }
+
+  if (notFound || !course) {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold tracking-tight">Course Not Found</h1>

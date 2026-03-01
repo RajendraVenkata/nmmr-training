@@ -1,11 +1,25 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CourseForm } from "@/components/admin/CourseForm";
-import { sampleCourses } from "@/data/sample-courses";
 import type { CourseFormData } from "@/lib/validators";
+
+interface CourseData {
+  _id: string;
+  slug: string;
+  title: string;
+  description: string;
+  longDescription: string;
+  category: string;
+  difficulty: string;
+  price: number;
+  currency: string;
+  instructor: string;
+  status: string;
+}
 
 export default function EditCoursePage({
   params,
@@ -13,9 +27,35 @@ export default function EditCoursePage({
   params: { id: string };
 }) {
   const { id } = params;
-  const course = sampleCourses.find((c) => c.id === id);
+  const [course, setCourse] = useState<CourseData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  if (!course) {
+  useEffect(() => {
+    fetch(`/api/admin/courses/${id}`)
+      .then((res) => {
+        if (!res.ok) {
+          setNotFound(true);
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data && !data.error) setCourse(data);
+      })
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <p className="text-muted-foreground">Loading course...</p>
+      </div>
+    );
+  }
+
+  if (notFound || !course) {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold tracking-tight">Course Not Found</h1>
@@ -32,7 +72,7 @@ export default function EditCoursePage({
     );
   }
 
-  const defaultValues: Partial<CourseFormData> = {
+  const defaultValues = {
     title: course.title,
     slug: course.slug,
     description: course.description,
@@ -43,7 +83,7 @@ export default function EditCoursePage({
     currency: course.currency,
     instructor: course.instructor,
     status: course.status,
-  };
+  } as Partial<CourseFormData>;
 
   return (
     <div className="space-y-6">

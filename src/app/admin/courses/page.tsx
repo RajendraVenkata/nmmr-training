@@ -1,12 +1,26 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CourseTable } from "@/components/admin/CourseTable";
-import { sampleCourses } from "@/data/sample-courses";
+import type { AdminCourseItem } from "@/types";
 
 export default function AdminCoursesPage() {
+  const [courses, setCourses] = useState<AdminCourseItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/courses")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setCourses(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -24,7 +38,11 @@ export default function AdminCoursesPage() {
         </Button>
       </div>
 
-      <CourseTable courses={sampleCourses} />
+      {loading ? (
+        <p className="text-muted-foreground">Loading courses...</p>
+      ) : (
+        <CourseTable courses={courses} />
+      )}
     </div>
   );
 }

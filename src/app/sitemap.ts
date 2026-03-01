@@ -1,10 +1,9 @@
 import type { MetadataRoute } from "next";
 import { SITE } from "@/lib/constants";
-import { getPublishedCourses } from "@/data/sample-courses";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const courses = getPublishedCourses();
+export const dynamic = "force-dynamic";
 
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: SITE.url,
@@ -44,12 +43,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const courseRoutes: MetadataRoute.Sitemap = courses.map((course) => ({
-    url: `${SITE.url}/courses/${course.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.8,
-  }));
+  // Fetch published courses from API for dynamic routes
+  let courseRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE.url;
+    const res = await fetch(`${baseUrl}/api/courses`, { next: { revalidate: 3600 } });
+    if (res.ok) {
+      const courses: { slug: string }[] = await res.json();
+      courseRoutes = courses.map((course) => ({
+        url: `${SITE.url}/courses/${course.slug}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      }));
+    }
+  } catch {
+    // If API is unavailable, return static routes only
+  }
 
   return [...staticRoutes, ...courseRoutes];
 }

@@ -1,6 +1,8 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import type { Metadata } from "next";
 import {
   Clock,
   BookOpen,
@@ -13,41 +15,55 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CourseCurriculum } from "@/components/courses/CourseCurriculum";
 import { EnrollButton } from "@/components/courses/EnrollButton";
-import { getCourseBySlug, getPublishedCourses, getLessonsCount } from "@/data/sample-courses";
 import { formatPrice } from "@/lib/utils";
-import { createMetadata, createCourseJsonLd } from "@/lib/seo";
+import type { CourseDetail } from "@/types";
 
-interface CoursePageProps {
-  params: { slug: string };
-}
+export default function CoursePage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-export async function generateStaticParams() {
-  const courses = getPublishedCourses();
-  return courses.map((course) => ({ slug: course.slug }));
-}
+  useEffect(() => {
+    fetch(`/api/courses/${slug}`)
+      .then((res) => {
+        if (res.status === 404) {
+          setNotFound(true);
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data && !data.error) setCourse(data);
+      })
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false));
+  }, [slug]);
 
-export async function generateMetadata({
-  params,
-}: CoursePageProps): Promise<Metadata> {
-  const course = getCourseBySlug(params.slug);
-  if (!course) return { title: "Course Not Found" };
-
-  return createMetadata({
-    title: course.title,
-    description: course.description,
-    path: `/courses/${course.slug}`,
-  });
-}
-
-export default function CoursePage({ params }: CoursePageProps) {
-  const course = getCourseBySlug(params.slug);
-
-  if (!course) {
-    notFound();
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-12 text-center">
+        <p className="text-lg text-muted-foreground">Loading course...</p>
+      </div>
+    );
   }
 
-  const lessonsCount = getLessonsCount(course);
-  const jsonLd = createCourseJsonLd(course);
+  if (notFound || !course) {
+    return (
+      <div className="container mx-auto px-4 py-12 text-center">
+        <h1 className="text-2xl font-bold mb-2">Course Not Found</h1>
+        <p className="text-muted-foreground mb-4">
+          The course you&apos;re looking for doesn&apos;t exist.
+        </p>
+        <Link href="/courses" className="text-primary hover:underline">
+          Back to Courses
+        </Link>
+      </div>
+    );
+  }
+
+  const lessonsCount = course.lessonsCount;
 
   // Extract "What you'll learn" from longDescription
   const learnItems = course.longDescription
@@ -57,12 +73,7 @@ export default function CoursePage({ params }: CoursePageProps) {
     .map((line) => line.replace("- ", ""));
 
   return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <div>
+    <div>
       {/* Hero section */}
       <section className="border-b bg-muted/30">
         <div className="container mx-auto px-4 py-12">
@@ -205,6 +216,5 @@ export default function CoursePage({ params }: CoursePageProps) {
         </div>
       </section>
     </div>
-    </>
   );
 }

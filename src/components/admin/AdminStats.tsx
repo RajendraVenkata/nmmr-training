@@ -2,10 +2,10 @@
 
 import { Users, BookOpen, GraduationCap, IndianRupee } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { AdminStats as AdminStatsType } from "@/data/sample-admin";
+import type { AdminDashboardStats } from "@/types";
 
 interface AdminStatsProps {
-  stats: AdminStatsType;
+  stats: AdminDashboardStats;
 }
 
 const statConfig = [

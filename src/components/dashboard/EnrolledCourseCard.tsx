@@ -11,10 +11,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import type { SampleEnrollment } from "@/data/sample-enrollments";
+import type { EnrollmentWithCourse } from "@/types";
 
 interface EnrolledCourseCardProps {
-  enrollment: SampleEnrollment;
+  enrollment: EnrollmentWithCourse;
 }
 
 export function EnrolledCourseCard({ enrollment }: EnrolledCourseCardProps) {

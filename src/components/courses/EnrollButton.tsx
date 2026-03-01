@@ -69,7 +69,7 @@ export function EnrollButton({ courseId, courseSlug, price }: EnrollButtonProps)
         {status === "authenticated" ? label : "Sign in to Enroll"}
       </Button>
       {error && (
-        <p className="text-sm text-destructive text-center">{error}</p>
+        <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
       )}
     </div>
   );
