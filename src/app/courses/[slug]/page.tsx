@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CourseCurriculum } from "@/components/courses/CourseCurriculum";
+import { EnrollButton } from "@/components/courses/EnrollButton";
 import { getCourseBySlug, getPublishedCourses, getLessonsCount } from "@/data/sample-courses";
 import { formatPrice } from "@/lib/utils";
 import { createMetadata, createCourseJsonLd } from "@/lib/seo";
@@ -127,11 +128,11 @@ export default function CoursePage({ params }: CoursePageProps) {
                   </span>
                 </div>
 
-                <Button size="lg" className="w-full mb-3" asChild>
-                  <Link href="/register">
-                    {course.price === 0 ? "Enroll for Free" : "Buy Now"}
-                  </Link>
-                </Button>
+                <EnrollButton
+                  courseId={course.id}
+                  courseSlug={course.slug}
+                  price={course.price}
+                />
 
                 <Separator className="my-4" />
 
