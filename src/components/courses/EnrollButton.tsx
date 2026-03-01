@@ -13,7 +13,7 @@ interface EnrollButtonProps {
 }
 
 export function EnrollButton({ courseId, courseSlug, price }: EnrollButtonProps) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
