@@ -30,6 +30,9 @@ jobs:
           NEXT_PUBLIC_CLARITY_ID: ${{ vars.NEXT_PUBLIC_CLARITY_ID }}
           NEXT_PUBLIC_CHAT_ENABLED: ${{ vars.NEXT_PUBLIC_CHAT_ENABLED }}
           NEXT_PUBLIC_CHAT_API_URL: ${{ vars.NEXT_PUBLIC_CHAT_API_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}
 
   close_pull_request:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
