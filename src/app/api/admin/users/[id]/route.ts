@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 
+export const dynamic = "force-dynamic";
+
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user?.id) {

@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/db";
 import { Enrollment } from "@/lib/models/Enrollment";
 import { Course } from "@/lib/models/Course";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const session = await auth();

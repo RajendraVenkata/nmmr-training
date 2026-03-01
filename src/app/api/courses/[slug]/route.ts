@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCourseBySlug, getLessonsCount } from "@/data/sample-courses";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _request: Request,
   { params }: { params: { slug: string } }

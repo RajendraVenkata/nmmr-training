@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { Enrollment } from "@/lib/models/Enrollment";
 
+export const dynamic = "force-dynamic";
+
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user?.id) {

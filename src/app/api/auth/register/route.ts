@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { registerSchema } from "@/lib/validators";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

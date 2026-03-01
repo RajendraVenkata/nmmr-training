@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getPublishedCourses, searchCourses, getLessonsCount } from "@/data/sample-courses";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q") || "";
