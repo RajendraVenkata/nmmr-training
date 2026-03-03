@@ -60,7 +60,7 @@ export async function GET() {
 
     // Recent enrollments
     const recentEnrollments = await Enrollment.find()
-      .sort({ enrolledAt: -1 })
+      .sort({ _id: -1 })
       .limit(5)
       .lean();
 

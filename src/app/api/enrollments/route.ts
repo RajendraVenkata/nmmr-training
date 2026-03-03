@@ -16,7 +16,7 @@ export async function GET() {
     await connectDB();
 
     const enrollments = await Enrollment.find({ userId: session.user.id })
-      .sort({ enrolledAt: -1 })
+      .sort({ _id: -1 })
       .lean();
 
     const courseIds = enrollments.map((e) => e.courseId);

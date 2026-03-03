@@ -30,9 +30,16 @@ export async function connectDB() {
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI, {
-      dbName: "nmmr-training",
-    }).then((m) => m);
+    cached.promise = mongoose
+      .connect(MONGODB_URI, {
+        dbName: "nmmr-training",
+        retryWrites: false,
+      })
+      .then((m) => m)
+      .catch((err) => {
+        cached.promise = null;
+        throw err;
+      });
   }
 
   cached.conn = await cached.promise;

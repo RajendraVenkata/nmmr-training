@@ -41,7 +41,7 @@ export async function GET(request: Request) {
         }
       : {};
 
-    const users = await User.find(filter).sort({ createdAt: -1 }).lean();
+    const users = await User.find(filter).sort({ _id: -1 }).lean();
 
     const userIds = users.map((u) => u._id.toString());
     const enrollmentCounts = await Enrollment.aggregate([

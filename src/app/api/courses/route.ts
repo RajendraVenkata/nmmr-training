@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       filter.difficulty = difficulty;
     }
 
-    const courses = await Course.find(filter).sort({ createdAt: -1 }).lean();
+    const courses = await Course.find(filter).sort({ _id: -1 }).lean();
 
     const result = courses.map((c) => ({
       id: c._id.toString(),

@@ -28,7 +28,7 @@ export async function GET() {
 
     await connectDB();
 
-    const courses = await Course.find().sort({ createdAt: -1 }).lean();
+    const courses = await Course.find().sort({ _id: -1 }).lean();
 
     return NextResponse.json(
       courses.map((c) => ({
