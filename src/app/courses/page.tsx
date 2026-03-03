@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { CourseSearch } from "@/components/courses/CourseSearch";
@@ -8,12 +9,17 @@ import { CourseFilters } from "@/components/courses/CourseFilters";
 import type { PublicCourseItem } from "@/types";
 
 export default function CoursesPage() {
+  const { status } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
   const [courses, setCourses] = useState<PublicCourseItem[]>([]);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<Set<string>>(
+    new Set()
+  );
   const [loading, setLoading] = useState(true);
 
+  // Fetch all published courses
   useEffect(() => {
     fetch("/api/courses")
       .then((res) => res.json())
@@ -23,6 +29,26 @@ export default function CoursesPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // Fetch enrolled course IDs for authenticated users
+  useEffect(() => {
+    if (status !== "authenticated") {
+      setEnrolledCourseIds(new Set());
+      return;
+    }
+
+    fetch("/api/enrollments")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const ids = new Set<string>(
+            data.map((e: { courseId: string }) => e.courseId)
+          );
+          setEnrolledCourseIds(ids);
+        }
+      })
+      .catch(() => {});
+  }, [status]);
 
   const filteredCourses = useMemo(() => {
     let result = courses;
@@ -98,6 +124,7 @@ export default function CoursesPage() {
                 duration={course.duration}
                 instructor={course.instructor}
                 lessonsCount={course.lessonsCount}
+                isEnrolled={enrolledCourseIds.has(course.id)}
               />
             ))}
           </div>

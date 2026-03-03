@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, BookOpen } from "lucide-react";
+import { Clock, BookOpen, CheckCircle2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -21,6 +21,7 @@ interface CourseCardProps {
   duration: string;
   instructor: string;
   lessonsCount: number;
+  isEnrolled?: boolean;
 }
 
 const difficultyColors: Record<string, string> = {
@@ -40,9 +41,10 @@ export function CourseCard({
   duration,
   instructor,
   lessonsCount,
+  isEnrolled,
 }: CourseCardProps) {
   return (
-    <Link href={`/courses/${slug}`}>
+    <Link href={isEnrolled ? `/dashboard/courses/${slug}` : `/courses/${slug}`}>
       <Card className="h-full transition-all hover:shadow-lg hover:border-accent/50">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-2 mb-2">
@@ -73,13 +75,20 @@ export function CourseCard({
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold">
-              {price === 0 ? (
-                <span className="text-green-600 dark:text-green-400">Free</span>
-              ) : (
-                formatPrice(price, currency)
-              )}
-            </span>
+            {isEnrolled ? (
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-600 dark:text-green-400">
+                <CheckCircle2 className="h-4 w-4" />
+                Enrolled
+              </span>
+            ) : (
+              <span className="text-lg font-bold">
+                {price === 0 ? (
+                  <span className="text-green-600 dark:text-green-400">Free</span>
+                ) : (
+                  formatPrice(price, currency)
+                )}
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>
