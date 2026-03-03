@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, PlayCircle } from "lucide-react";
 
 interface EnrollButtonProps {
   courseId: string;
@@ -16,7 +16,31 @@ export function EnrollButton({ courseId, courseSlug, price }: EnrollButtonProps)
   const { status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [enrolled, setEnrolled] = useState(false);
   const [error, setError] = useState("");
+
+  // Check if already enrolled when user is authenticated
+  useEffect(() => {
+    if (status !== "authenticated") {
+      setEnrolled(false);
+      return;
+    }
+
+    setChecking(true);
+    fetch("/api/enrollments")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const found = data.some(
+            (e: { courseId: string }) => e.courseId === courseId
+          );
+          setEnrolled(found);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setChecking(false));
+  }, [courseId, status]);
 
   const label = price === 0 ? "Enroll for Free" : "Buy Now";
 
@@ -57,19 +81,46 @@ export function EnrollButton({ courseId, courseSlug, price }: EnrollButtonProps)
     }
   }
 
+  // Already enrolled — show "Continue Learning"
+  if (enrolled) {
+    return (
+      <div>
+        <Button
+          size="lg"
+          className="w-full mb-3"
+          onClick={() => router.push(`/dashboard/courses/${courseSlug}`)}
+        >
+          <PlayCircle className="mr-2 h-4 w-4" />
+          Continue Learning
+        </Button>
+        <p className="text-xs text-muted-foreground text-center">
+          You are already enrolled in this course
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <Button
         size="lg"
         className="w-full mb-3"
         onClick={handleEnroll}
-        disabled={loading || status === "loading"}
+        disabled={loading || checking || status === "loading"}
       >
-        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {status === "authenticated" ? label : "Sign in to Enroll"}
+        {(loading || checking) && (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        )}
+        {checking
+          ? "Checking..."
+          : status === "authenticated"
+            ? label
+            : "Sign in to Enroll"}
       </Button>
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+        <p className="text-sm text-red-600 dark:text-red-400 text-center">
+          {error}
+        </p>
       )}
     </div>
   );
