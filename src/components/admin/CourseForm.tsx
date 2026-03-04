@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUploader } from "./ImageUploader";
 import {
   Select,
   SelectContent,
@@ -34,6 +35,7 @@ interface CourseFormProps {
   mode: "create" | "edit";
   defaultValues?: Partial<CourseFormData>;
   courseId?: string;
+  thumbnailUrl?: string | null;
 }
 
 function slugify(text: string): string {
@@ -45,9 +47,13 @@ function slugify(text: string): string {
     .replace(/-+/g, "-");
 }
 
-export function CourseForm({ mode, defaultValues, courseId }: CourseFormProps) {
+export function CourseForm({ mode, defaultValues, courseId, thumbnailUrl }: CourseFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const [thumbnail, setThumbnail] = useState<{
+    base64: string;
+    mimeType: string;
+  } | null>(null);
 
   const {
     register,
@@ -81,22 +87,68 @@ export function CourseForm({ mode, defaultValues, courseId }: CourseFormProps) {
     }
   }, [title, mode, setValue]);
 
-  const onSubmit = handleSubmit(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast({
-      title: mode === "create" ? "Course created" : "Course updated",
-      description:
-        mode === "create"
-          ? "Your new course has been created as a draft."
-          : "Course details have been saved.",
-    });
-    if (mode === "create") {
-      router.push("/admin/courses");
+  const onSubmit = handleSubmit(async (data) => {
+    try {
+      let thumbnailRef: string | undefined;
+
+      if (thumbnail) {
+        const imgRes = await fetch("/api/admin/images", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            base64: thumbnail.base64,
+            mimeType: thumbnail.mimeType,
+            purpose: "thumbnail",
+            filename: `${data.slug}-thumbnail`,
+            altText: `${data.title} thumbnail`,
+          }),
+        });
+        if (imgRes.ok) {
+          const imgData = await imgRes.json();
+          thumbnailRef = imgData.image.id;
+        }
+      }
+
+      const payload = {
+        ...data,
+        price: Number(data.price) || 0,
+        ...(thumbnailRef ? { thumbnailRef } : {}),
+      };
+
+      if (mode === "create") {
+        const res = await fetch("/api/admin/courses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error("Failed to create course");
+      } else if (courseId) {
+        const res = await fetch(`/api/admin/courses/${courseId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error("Failed to update course");
+      }
+
+      toast({
+        title: mode === "create" ? "Course created" : "Course updated",
+        description:
+          mode === "create"
+            ? "Your new course has been created as a draft."
+            : "Course details have been saved.",
+      });
+      if (mode === "create") {
+        router.push("/admin/courses");
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
     }
   });
-
-  // Suppress unused variable warning for courseId
-  void courseId;
 
   return (
     <form onSubmit={onSubmit} className="space-y-6 max-w-3xl">
@@ -167,6 +219,18 @@ export function CourseForm({ mode, defaultValues, courseId }: CourseFormProps) {
               </p>
             )}
           </div>
+
+          <ImageUploader
+            label="Course Thumbnail"
+            currentImageUrl={
+              thumbnail
+                ? `data:${thumbnail.mimeType};base64,${thumbnail.base64}`
+                : thumbnailUrl || null
+            }
+            onUpload={(data) =>
+              setThumbnail({ base64: data.base64, mimeType: data.mimeType })
+            }
+          />
         </CardContent>
       </Card>
 

@@ -23,7 +23,7 @@ import type { ModuleFormData, LessonFormData } from "@/lib/validators";
 interface LessonItem {
   id: string;
   title: string;
-  type: "video" | "document" | "quiz" | "markdown";
+  type: "markdown" | "document" | "quiz" | "image";
   duration: string;
   order: number;
   isFree: boolean;
@@ -37,6 +37,7 @@ interface ModuleItem {
 }
 
 interface ModuleEditorProps {
+  courseId: string;
   modules: ModuleItem[];
   onAddModule: (data: ModuleFormData) => void;
   onEditModule: (moduleId: string, data: ModuleFormData) => void;
@@ -51,6 +52,7 @@ interface ModuleEditorProps {
 }
 
 export function ModuleEditor({
+  courseId,
   modules,
   onAddModule,
   onEditModule,
@@ -143,6 +145,7 @@ export function ModuleEditor({
               {isExpanded && (
                 <CardContent className="pt-0 pb-3 px-4">
                   <LessonEditor
+                    courseId={courseId}
                     lessons={mod.lessons}
                     onAdd={(data) => onAddLesson(mod.id, data)}
                     onEdit={(lessonId, data) =>

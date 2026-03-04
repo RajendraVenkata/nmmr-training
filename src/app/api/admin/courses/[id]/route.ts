@@ -76,6 +76,10 @@ export async function PUT(
       );
     }
 
+    const thumbnailUrl = course.thumbnailRef
+      ? `/api/images/${course.thumbnailRef.toString()}`
+      : null;
+
     return NextResponse.json({
       message: "Course updated",
       course: {
@@ -83,6 +87,7 @@ export async function PUT(
         slug: course.slug,
         title: course.title,
         status: course.status,
+        thumbnailUrl,
       },
     });
   } catch (error) {

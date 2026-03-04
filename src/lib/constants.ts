@@ -77,6 +77,33 @@ export const COURSE_DIFFICULTIES = [
 ] as const;
 
 // ============================================================
+// Lesson Types
+// ============================================================
+
+export const LESSON_TYPES = [
+  { value: "markdown", label: "Markdown" },
+  { value: "document", label: "Document" },
+  { value: "quiz", label: "Quiz" },
+  { value: "image", label: "Image" },
+] as const;
+
+// ============================================================
+// Content Limits
+// ============================================================
+
+export const MAX_IMAGE_SIZE_BYTES = 2_097_152; // 2MB
+export const ALLOWED_IMAGE_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "image/svg+xml",
+] as const;
+export const MAX_LESSON_CONTENT_SIZE = 512_000; // 500KB for markdown
+export const MAX_QUIZ_QUESTIONS = 50;
+export const MAX_QUIZ_OPTIONS = 6;
+
+// ============================================================
 // Footer Links
 // ============================================================
 

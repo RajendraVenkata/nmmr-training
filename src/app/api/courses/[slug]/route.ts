@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Course } from "@/lib/models/Course";
+import { LessonContent } from "@/lib/models/LessonContent";
 
 export const dynamic = "force-dynamic";
 
@@ -30,13 +31,27 @@ export async function GET(
         0
       ) || 0;
 
+    // Get all lesson IDs that have content
+    const lessonContentDocs = await LessonContent.find(
+      { courseId: course._id },
+      { lessonId: 1 }
+    ).lean();
+    const contentLessonIds = new Set(
+      lessonContentDocs.map((d) => d.lessonId.toString())
+    );
+
+    const thumbnailUrl = course.thumbnailRef
+      ? `/api/images/${course.thumbnailRef.toString()}`
+      : null;
+
     return NextResponse.json({
       id: course._id.toString(),
       slug: course.slug,
       title: course.title,
       description: course.description,
       longDescription: course.longDescription || "",
-      thumbnail: course.thumbnail || "/images/placeholder-course.webp",
+      thumbnail: thumbnailUrl || course.thumbnail || "/images/placeholder-course.webp",
+      thumbnailUrl,
       price: course.price,
       currency: course.currency || "INR",
       category: course.category,
@@ -44,6 +59,8 @@ export async function GET(
       duration: course.duration,
       status: course.status,
       instructor: course.instructor,
+      tags: course.tags || [],
+      prerequisites: course.prerequisites || [],
       lessonsCount,
       modules: (course.modules || []).map(
         (m: {
@@ -54,10 +71,10 @@ export async function GET(
             _id: { toString: () => string };
             title: string;
             type: string;
-            content: string;
             duration: string;
             order: number;
             isFree: boolean;
+            contentRef?: { toString: () => string };
           }[];
         }) => ({
           id: m._id.toString(),
@@ -67,10 +84,10 @@ export async function GET(
             id: l._id.toString(),
             title: l.title,
             type: l.type,
-            content: l.content || "",
             duration: l.duration,
             order: l.order,
             isFree: l.isFree,
+            hasContent: contentLessonIds.has(l._id.toString()),
           })),
         })
       ),

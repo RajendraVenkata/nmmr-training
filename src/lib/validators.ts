@@ -111,7 +111,7 @@ export const lessonFormSchema = z.object({
     .string()
     .min(2, "Lesson title must be at least 2 characters")
     .max(200, "Lesson title must be less than 200 characters"),
-  type: z.enum(["video", "document", "quiz", "markdown"]),
+  type: z.enum(["markdown", "document", "quiz", "image"]),
   content: z.string(),
   duration: z.string().min(1, "Duration is required"),
   isFree: z.boolean(),
@@ -128,3 +128,124 @@ export const userRoleSchema = z.object({
 });
 
 export type UserRoleFormData = z.infer<typeof userRoleSchema>;
+
+// ============================================================
+// Content Validation Schemas
+// ============================================================
+
+export const quizOptionSchema = z.object({
+  text: z.string().min(1, "Option text is required"),
+  isCorrect: z.boolean(),
+  order: z.number().int().min(0),
+});
+
+export const quizQuestionSchema = z
+  .object({
+    questionText: z.string().min(1, "Question text is required"),
+    questionType: z.enum(["multiple-choice", "multi-select", "true-false"]),
+    options: z
+      .array(quizOptionSchema)
+      .min(2, "At least 2 options required")
+      .max(6, "Maximum 6 options"),
+    explanation: z.string(),
+    order: z.number().int().min(0),
+  })
+  .refine((q) => q.options.some((o) => o.isCorrect), {
+    message: "At least one option must be correct",
+    path: ["options"],
+  })
+  .refine(
+    (q) => q.questionType !== "true-false" || q.options.length === 2,
+    {
+      message: "True/false questions must have exactly 2 options",
+      path: ["options"],
+    }
+  );
+
+export const quizDataSchema = z.object({
+  title: z
+    .string()
+    .min(3, "Quiz title must be at least 3 characters")
+    .max(200, "Quiz title must be less than 200 characters"),
+  description: z.string(),
+  passingScore: z
+    .number()
+    .min(0, "Passing score must be 0 or more")
+    .max(100, "Passing score must be 100 or less"),
+  shuffleQuestions: z.boolean(),
+  questions: z
+    .array(quizQuestionSchema)
+    .min(1, "At least 1 question required")
+    .max(50, "Maximum 50 questions"),
+});
+
+export type QuizDataFormData = z.infer<typeof quizDataSchema>;
+
+export const imageUploadSchema = z.object({
+  base64: z.string().min(1, "Image data is required"),
+  mimeType: z.enum([
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/gif",
+    "image/svg+xml",
+  ]),
+  filename: z.string().min(1, "Filename is required"),
+  altText: z
+    .string()
+    .min(3, "Alt text must be at least 3 characters")
+    .max(200, "Alt text must be less than 200 characters"),
+  sizeBytes: z.number().max(2_097_152, "Image must be 2MB or smaller"),
+});
+
+export type ImageUploadFormData = z.infer<typeof imageUploadSchema>;
+
+export const lessonContentSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("markdown"),
+    markdownContent: z
+      .string()
+      .min(1, "Content is required")
+      .max(512_000, "Content too large (500KB max)"),
+  }),
+  z.object({
+    type: z.literal("document"),
+    markdownContent: z
+      .string()
+      .min(1, "Content is required")
+      .max(512_000, "Content too large (500KB max)"),
+  }),
+  z.object({
+    type: z.literal("quiz"),
+    quizData: quizDataSchema,
+  }),
+  z.object({
+    type: z.literal("image"),
+    imageData: z.object({
+      base64: z.string().min(1, "Image data is required"),
+      mimeType: z.enum([
+        "image/png",
+        "image/jpeg",
+        "image/webp",
+        "image/gif",
+        "image/svg+xml",
+      ]),
+      altText: z.string().min(3, "Alt text is required"),
+      caption: z.string(),
+    }),
+  }),
+]);
+
+export type LessonContentFormData = z.infer<typeof lessonContentSchema>;
+
+export const quizSubmissionSchema = z.object({
+  lessonId: z.string().min(1, "Lesson ID is required"),
+  answers: z.array(
+    z.object({
+      questionIndex: z.number().int().min(0),
+      selectedOptions: z.array(z.number().int().min(0)),
+    })
+  ),
+});
+
+export type QuizSubmissionData = z.infer<typeof quizSubmissionSchema>;

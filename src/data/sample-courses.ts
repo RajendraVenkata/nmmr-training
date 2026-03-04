@@ -21,7 +21,7 @@ export interface SampleCourse {
     lessons: {
       id: string;
       title: string;
-      type: "video" | "document" | "quiz" | "markdown";
+      type: "markdown" | "document" | "quiz" | "image";
       duration: string;
       order: number;
       isFree: boolean;
@@ -66,8 +66,8 @@ You'll learn about the core concepts behind Large Language Models (LLMs), how tr
         title: "Getting Started with AI",
         order: 1,
         lessons: [
-          { id: "l1", title: "What is Generative AI?", type: "video", duration: "15 min", order: 1, isFree: true },
-          { id: "l2", title: "History of AI: From Rule-Based to Generative", type: "video", duration: "20 min", order: 2, isFree: true },
+          { id: "l1", title: "What is Generative AI?", type: "markdown", duration: "15 min", order: 1, isFree: true },
+          { id: "l2", title: "History of AI: From Rule-Based to Generative", type: "markdown", duration: "20 min", order: 2, isFree: true },
           { id: "l3", title: "Key Concepts and Terminology", type: "markdown", duration: "10 min", order: 3, isFree: false },
           { id: "l4", title: "Quiz: AI Fundamentals", type: "quiz", duration: "5 min", order: 4, isFree: false },
         ],
@@ -77,10 +77,10 @@ You'll learn about the core concepts behind Large Language Models (LLMs), how tr
         title: "Understanding Large Language Models",
         order: 2,
         lessons: [
-          { id: "l5", title: "How LLMs Work", type: "video", duration: "25 min", order: 1, isFree: false },
-          { id: "l6", title: "Transformer Architecture Explained", type: "video", duration: "30 min", order: 2, isFree: false },
+          { id: "l5", title: "How LLMs Work", type: "markdown", duration: "25 min", order: 1, isFree: false },
+          { id: "l6", title: "Transformer Architecture Explained", type: "markdown", duration: "30 min", order: 2, isFree: false },
           { id: "l7", title: "Tokenization and Embeddings", type: "markdown", duration: "15 min", order: 3, isFree: false },
-          { id: "l8", title: "Popular LLMs: GPT, Claude, Llama", type: "video", duration: "20 min", order: 4, isFree: false },
+          { id: "l8", title: "Popular LLMs: GPT, Claude, Llama", type: "markdown", duration: "20 min", order: 4, isFree: false },
         ],
       },
       {
@@ -88,9 +88,9 @@ You'll learn about the core concepts behind Large Language Models (LLMs), how tr
         title: "Practical Applications",
         order: 3,
         lessons: [
-          { id: "l9", title: "Text Generation and Summarization", type: "video", duration: "20 min", order: 1, isFree: false },
-          { id: "l10", title: "Code Generation with AI", type: "video", duration: "25 min", order: 2, isFree: false },
-          { id: "l11", title: "Building Your First AI App", type: "video", duration: "35 min", order: 3, isFree: false },
+          { id: "l9", title: "Text Generation and Summarization", type: "markdown", duration: "20 min", order: 1, isFree: false },
+          { id: "l10", title: "Code Generation with AI", type: "markdown", duration: "25 min", order: 2, isFree: false },
+          { id: "l11", title: "Building Your First AI App", type: "markdown", duration: "35 min", order: 3, isFree: false },
           { id: "l12", title: "Final Project: AI-Powered Tool", type: "document", duration: "60 min", order: 4, isFree: false },
         ],
       },
@@ -131,8 +131,8 @@ This intermediate course teaches you how to create AI agents that go beyond simp
         title: "Introduction to AI Agents",
         order: 1,
         lessons: [
-          { id: "l13", title: "What Are AI Agents?", type: "video", duration: "15 min", order: 1, isFree: true },
-          { id: "l14", title: "Agent Architectures Overview", type: "video", duration: "20 min", order: 2, isFree: true },
+          { id: "l13", title: "What Are AI Agents?", type: "markdown", duration: "15 min", order: 1, isFree: true },
+          { id: "l14", title: "Agent Architectures Overview", type: "markdown", duration: "20 min", order: 2, isFree: true },
           { id: "l15", title: "Setting Up Your Development Environment", type: "markdown", duration: "15 min", order: 3, isFree: false },
         ],
       },
@@ -141,10 +141,10 @@ This intermediate course teaches you how to create AI agents that go beyond simp
         title: "LangChain Fundamentals",
         order: 2,
         lessons: [
-          { id: "l16", title: "LangChain Core Concepts", type: "video", duration: "25 min", order: 1, isFree: false },
-          { id: "l17", title: "Chains and Prompts", type: "video", duration: "30 min", order: 2, isFree: false },
-          { id: "l18", title: "Memory and State Management", type: "video", duration: "25 min", order: 3, isFree: false },
-          { id: "l19", title: "Tools and Tool Calling", type: "video", duration: "30 min", order: 4, isFree: false },
+          { id: "l16", title: "LangChain Core Concepts", type: "markdown", duration: "25 min", order: 1, isFree: false },
+          { id: "l17", title: "Chains and Prompts", type: "markdown", duration: "30 min", order: 2, isFree: false },
+          { id: "l18", title: "Memory and State Management", type: "markdown", duration: "25 min", order: 3, isFree: false },
+          { id: "l19", title: "Tools and Tool Calling", type: "markdown", duration: "30 min", order: 4, isFree: false },
         ],
       },
       {
@@ -152,9 +152,9 @@ This intermediate course teaches you how to create AI agents that go beyond simp
         title: "Building Your First Agent",
         order: 3,
         lessons: [
-          { id: "l20", title: "ReAct Agent Pattern", type: "video", duration: "30 min", order: 1, isFree: false },
-          { id: "l21", title: "Custom Tools for Agents", type: "video", duration: "35 min", order: 2, isFree: false },
-          { id: "l22", title: "Error Handling and Guardrails", type: "video", duration: "20 min", order: 3, isFree: false },
+          { id: "l20", title: "ReAct Agent Pattern", type: "markdown", duration: "30 min", order: 1, isFree: false },
+          { id: "l21", title: "Custom Tools for Agents", type: "markdown", duration: "35 min", order: 2, isFree: false },
+          { id: "l22", title: "Error Handling and Guardrails", type: "markdown", duration: "20 min", order: 3, isFree: false },
           { id: "l23", title: "Project: Research Agent", type: "document", duration: "90 min", order: 4, isFree: false },
         ],
       },
@@ -163,9 +163,9 @@ This intermediate course teaches you how to create AI agents that go beyond simp
         title: "Advanced Agent Patterns",
         order: 4,
         lessons: [
-          { id: "l24", title: "Multi-Agent Orchestration", type: "video", duration: "35 min", order: 1, isFree: false },
-          { id: "l25", title: "RAG-Powered Agents", type: "video", duration: "40 min", order: 2, isFree: false },
-          { id: "l26", title: "Human-in-the-Loop Agents", type: "video", duration: "25 min", order: 3, isFree: false },
+          { id: "l24", title: "Multi-Agent Orchestration", type: "markdown", duration: "35 min", order: 1, isFree: false },
+          { id: "l25", title: "RAG-Powered Agents", type: "markdown", duration: "40 min", order: 2, isFree: false },
+          { id: "l26", title: "Human-in-the-Loop Agents", type: "markdown", duration: "25 min", order: 3, isFree: false },
           { id: "l27", title: "Final Project: Production Agent System", type: "document", duration: "120 min", order: 4, isFree: false },
         ],
       },
@@ -207,8 +207,8 @@ Learn systematic techniques for writing prompts that consistently produce high-q
         title: "Prompt Engineering Foundations",
         order: 1,
         lessons: [
-          { id: "l28", title: "Why Prompt Engineering Matters", type: "video", duration: "10 min", order: 1, isFree: true },
-          { id: "l29", title: "Anatomy of a Good Prompt", type: "video", duration: "20 min", order: 2, isFree: true },
+          { id: "l28", title: "Why Prompt Engineering Matters", type: "markdown", duration: "10 min", order: 1, isFree: true },
+          { id: "l29", title: "Anatomy of a Good Prompt", type: "markdown", duration: "20 min", order: 2, isFree: true },
           { id: "l30", title: "Common Prompt Patterns", type: "markdown", duration: "15 min", order: 3, isFree: false },
         ],
       },
@@ -217,10 +217,10 @@ Learn systematic techniques for writing prompts that consistently produce high-q
         title: "Advanced Techniques",
         order: 2,
         lessons: [
-          { id: "l31", title: "Chain-of-Thought Prompting", type: "video", duration: "25 min", order: 1, isFree: false },
-          { id: "l32", title: "Few-Shot and Zero-Shot Learning", type: "video", duration: "20 min", order: 2, isFree: false },
-          { id: "l33", title: "System Prompts and Personas", type: "video", duration: "25 min", order: 3, isFree: false },
-          { id: "l34", title: "Structured Output Techniques", type: "video", duration: "20 min", order: 4, isFree: false },
+          { id: "l31", title: "Chain-of-Thought Prompting", type: "markdown", duration: "25 min", order: 1, isFree: false },
+          { id: "l32", title: "Few-Shot and Zero-Shot Learning", type: "markdown", duration: "20 min", order: 2, isFree: false },
+          { id: "l33", title: "System Prompts and Personas", type: "markdown", duration: "25 min", order: 3, isFree: false },
+          { id: "l34", title: "Structured Output Techniques", type: "markdown", duration: "20 min", order: 4, isFree: false },
         ],
       },
       {
@@ -228,9 +228,9 @@ Learn systematic techniques for writing prompts that consistently produce high-q
         title: "Domain-Specific Prompting",
         order: 3,
         lessons: [
-          { id: "l35", title: "Prompts for Code Generation", type: "video", duration: "30 min", order: 1, isFree: false },
-          { id: "l36", title: "Prompts for Content Writing", type: "video", duration: "25 min", order: 2, isFree: false },
-          { id: "l37", title: "Prompts for Data Analysis", type: "video", duration: "25 min", order: 3, isFree: false },
+          { id: "l35", title: "Prompts for Code Generation", type: "markdown", duration: "30 min", order: 1, isFree: false },
+          { id: "l36", title: "Prompts for Content Writing", type: "markdown", duration: "25 min", order: 2, isFree: false },
+          { id: "l37", title: "Prompts for Data Analysis", type: "markdown", duration: "25 min", order: 3, isFree: false },
           { id: "l38", title: "Building a Prompt Library", type: "document", duration: "45 min", order: 4, isFree: false },
         ],
       },
@@ -272,9 +272,9 @@ This advanced course takes you from understanding the theory behind RAG to deplo
         title: "RAG Fundamentals",
         order: 1,
         lessons: [
-          { id: "l39", title: "What is RAG and Why It Matters", type: "video", duration: "15 min", order: 1, isFree: true },
-          { id: "l40", title: "RAG Architecture Deep Dive", type: "video", duration: "30 min", order: 2, isFree: false },
-          { id: "l41", title: "Embeddings and Vector Spaces", type: "video", duration: "25 min", order: 3, isFree: false },
+          { id: "l39", title: "What is RAG and Why It Matters", type: "markdown", duration: "15 min", order: 1, isFree: true },
+          { id: "l40", title: "RAG Architecture Deep Dive", type: "markdown", duration: "30 min", order: 2, isFree: false },
+          { id: "l41", title: "Embeddings and Vector Spaces", type: "markdown", duration: "25 min", order: 3, isFree: false },
         ],
       },
       {
@@ -282,10 +282,10 @@ This advanced course takes you from understanding the theory behind RAG to deplo
         title: "Building the Retrieval Pipeline",
         order: 2,
         lessons: [
-          { id: "l42", title: "Document Processing and Chunking", type: "video", duration: "30 min", order: 1, isFree: false },
-          { id: "l43", title: "Vector Databases Compared", type: "video", duration: "35 min", order: 2, isFree: false },
-          { id: "l44", title: "Hybrid Search Strategies", type: "video", duration: "30 min", order: 3, isFree: false },
-          { id: "l45", title: "Re-Ranking and Filtering", type: "video", duration: "25 min", order: 4, isFree: false },
+          { id: "l42", title: "Document Processing and Chunking", type: "markdown", duration: "30 min", order: 1, isFree: false },
+          { id: "l43", title: "Vector Databases Compared", type: "markdown", duration: "35 min", order: 2, isFree: false },
+          { id: "l44", title: "Hybrid Search Strategies", type: "markdown", duration: "30 min", order: 3, isFree: false },
+          { id: "l45", title: "Re-Ranking and Filtering", type: "markdown", duration: "25 min", order: 4, isFree: false },
         ],
       },
       {
@@ -293,9 +293,9 @@ This advanced course takes you from understanding the theory behind RAG to deplo
         title: "Production RAG Systems",
         order: 3,
         lessons: [
-          { id: "l46", title: "Evaluation Metrics for RAG", type: "video", duration: "25 min", order: 1, isFree: false },
-          { id: "l47", title: "Optimization Techniques", type: "video", duration: "30 min", order: 2, isFree: false },
-          { id: "l48", title: "Deployment and Monitoring", type: "video", duration: "35 min", order: 3, isFree: false },
+          { id: "l46", title: "Evaluation Metrics for RAG", type: "markdown", duration: "25 min", order: 1, isFree: false },
+          { id: "l47", title: "Optimization Techniques", type: "markdown", duration: "30 min", order: 2, isFree: false },
+          { id: "l48", title: "Deployment and Monitoring", type: "markdown", duration: "35 min", order: 3, isFree: false },
           { id: "l49", title: "Final Project: Enterprise RAG System", type: "document", duration: "120 min", order: 4, isFree: false },
         ],
       },
@@ -337,8 +337,8 @@ This course bridges the gap between AI technology and business outcomes, teachin
         title: "Process Assessment",
         order: 1,
         lessons: [
-          { id: "l50", title: "Identifying Automation Opportunities", type: "video", duration: "20 min", order: 1, isFree: true },
-          { id: "l51", title: "Process Mapping for AI", type: "video", duration: "25 min", order: 2, isFree: false },
+          { id: "l50", title: "Identifying Automation Opportunities", type: "markdown", duration: "20 min", order: 1, isFree: true },
+          { id: "l51", title: "Process Mapping for AI", type: "markdown", duration: "25 min", order: 2, isFree: false },
           { id: "l52", title: "ROI Framework for AI Automation", type: "markdown", duration: "15 min", order: 3, isFree: false },
         ],
       },
@@ -347,9 +347,9 @@ This course bridges the gap between AI technology and business outcomes, teachin
         title: "Designing Agent Workflows",
         order: 2,
         lessons: [
-          { id: "l53", title: "Agent Architecture Patterns for Business", type: "video", duration: "30 min", order: 1, isFree: false },
-          { id: "l54", title: "Integration with Enterprise Tools", type: "video", duration: "25 min", order: 2, isFree: false },
-          { id: "l55", title: "Human-in-the-Loop Design", type: "video", duration: "20 min", order: 3, isFree: false },
+          { id: "l53", title: "Agent Architecture Patterns for Business", type: "markdown", duration: "30 min", order: 1, isFree: false },
+          { id: "l54", title: "Integration with Enterprise Tools", type: "markdown", duration: "25 min", order: 2, isFree: false },
+          { id: "l55", title: "Human-in-the-Loop Design", type: "markdown", duration: "20 min", order: 3, isFree: false },
         ],
       },
       {
@@ -357,9 +357,9 @@ This course bridges the gap between AI technology and business outcomes, teachin
         title: "Building and Deploying",
         order: 3,
         lessons: [
-          { id: "l56", title: "Building a Customer Support Agent", type: "video", duration: "40 min", order: 1, isFree: false },
-          { id: "l57", title: "Building a Data Processing Agent", type: "video", duration: "35 min", order: 2, isFree: false },
-          { id: "l58", title: "Monitoring and Optimization", type: "video", duration: "25 min", order: 3, isFree: false },
+          { id: "l56", title: "Building a Customer Support Agent", type: "markdown", duration: "40 min", order: 1, isFree: false },
+          { id: "l57", title: "Building a Data Processing Agent", type: "markdown", duration: "35 min", order: 2, isFree: false },
+          { id: "l58", title: "Monitoring and Optimization", type: "markdown", duration: "25 min", order: 3, isFree: false },
           { id: "l59", title: "Final Project: End-to-End Business Agent", type: "document", duration: "90 min", order: 4, isFree: false },
         ],
       },
@@ -402,8 +402,8 @@ No coding required — this course focuses on decision-making, strategy, and lea
         title: "Understanding the AI Landscape",
         order: 1,
         lessons: [
-          { id: "l60", title: "The State of AI in 2025", type: "video", duration: "15 min", order: 1, isFree: true },
-          { id: "l61", title: "AI Capabilities and Limitations", type: "video", duration: "20 min", order: 2, isFree: true },
+          { id: "l60", title: "The State of AI in 2025", type: "markdown", duration: "15 min", order: 1, isFree: true },
+          { id: "l61", title: "AI Capabilities and Limitations", type: "markdown", duration: "20 min", order: 2, isFree: true },
           { id: "l62", title: "AI Use Cases by Industry", type: "markdown", duration: "15 min", order: 3, isFree: false },
         ],
       },
@@ -412,10 +412,10 @@ No coding required — this course focuses on decision-making, strategy, and lea
         title: "Building Your AI Strategy",
         order: 2,
         lessons: [
-          { id: "l63", title: "AI Readiness Assessment", type: "video", duration: "20 min", order: 1, isFree: false },
-          { id: "l64", title: "Developing an AI Roadmap", type: "video", duration: "25 min", order: 2, isFree: false },
-          { id: "l65", title: "Build vs Buy Decisions", type: "video", duration: "20 min", order: 3, isFree: false },
-          { id: "l66", title: "Measuring AI ROI", type: "video", duration: "15 min", order: 4, isFree: false },
+          { id: "l63", title: "AI Readiness Assessment", type: "markdown", duration: "20 min", order: 1, isFree: false },
+          { id: "l64", title: "Developing an AI Roadmap", type: "markdown", duration: "25 min", order: 2, isFree: false },
+          { id: "l65", title: "Build vs Buy Decisions", type: "markdown", duration: "20 min", order: 3, isFree: false },
+          { id: "l66", title: "Measuring AI ROI", type: "markdown", duration: "15 min", order: 4, isFree: false },
         ],
       },
       {
@@ -423,9 +423,9 @@ No coding required — this course focuses on decision-making, strategy, and lea
         title: "Leading AI Transformation",
         order: 3,
         lessons: [
-          { id: "l67", title: "Change Management for AI", type: "video", duration: "20 min", order: 1, isFree: false },
-          { id: "l68", title: "AI Ethics and Governance", type: "video", duration: "20 min", order: 2, isFree: false },
-          { id: "l69", title: "Building an AI Team", type: "video", duration: "15 min", order: 3, isFree: false },
+          { id: "l67", title: "Change Management for AI", type: "markdown", duration: "20 min", order: 1, isFree: false },
+          { id: "l68", title: "AI Ethics and Governance", type: "markdown", duration: "20 min", order: 2, isFree: false },
+          { id: "l69", title: "Building an AI Team", type: "markdown", duration: "15 min", order: 3, isFree: false },
         ],
       },
     ],

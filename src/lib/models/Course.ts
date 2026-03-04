@@ -2,8 +2,9 @@ import mongoose, { Schema, type Document } from "mongoose";
 
 export interface ILesson {
   title: string;
-  type: "video" | "document" | "quiz" | "markdown";
+  type: "markdown" | "document" | "quiz" | "image";
   content: string;
+  contentRef?: mongoose.Types.ObjectId;
   duration: string;
   order: number;
   isFree: boolean;
@@ -21,6 +22,7 @@ export interface ICourse extends Document {
   description: string;
   longDescription: string;
   thumbnail: string;
+  thumbnailRef?: mongoose.Types.ObjectId;
   price: number;
   currency: string;
   category: string;
@@ -28,6 +30,8 @@ export interface ICourse extends Document {
   duration: string;
   status: "draft" | "published" | "archived";
   instructor: string;
+  tags: string[];
+  prerequisites: string[];
   modules: IModule[];
   createdAt: Date;
   updatedAt: Date;
@@ -38,10 +42,14 @@ const LessonSchema = new Schema<ILesson>(
     title: { type: String, required: true },
     type: {
       type: String,
-      enum: ["video", "document", "quiz", "markdown"],
+      enum: ["markdown", "document", "quiz", "image"],
       required: true,
     },
-    content: { type: String, default: "" },
+    content: { type: String, default: "", maxlength: 500 },
+    contentRef: {
+      type: Schema.Types.ObjectId,
+      ref: "LessonContent",
+    },
     duration: { type: String, default: "" },
     order: { type: Number, default: 0 },
     isFree: { type: Boolean, default: false },
@@ -65,6 +73,10 @@ const CourseSchema = new Schema<ICourse>(
     description: { type: String, required: true },
     longDescription: { type: String, default: "" },
     thumbnail: { type: String, default: "/images/placeholder-course.webp" },
+    thumbnailRef: {
+      type: Schema.Types.ObjectId,
+      ref: "CourseImage",
+    },
     price: { type: Number, default: 0 },
     currency: { type: String, default: "INR" },
     category: { type: String, required: true },
@@ -80,6 +92,8 @@ const CourseSchema = new Schema<ICourse>(
       default: "draft",
     },
     instructor: { type: String, default: "" },
+    tags: [{ type: String }],
+    prerequisites: [{ type: String }],
     modules: [ModuleSchema],
   },
   { timestamps: true }

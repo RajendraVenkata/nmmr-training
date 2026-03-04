@@ -80,6 +80,10 @@ export async function POST(request: Request) {
       modules: [],
     });
 
+    const thumbnailUrl = course.thumbnailRef
+      ? `/api/images/${course.thumbnailRef.toString()}`
+      : null;
+
     return NextResponse.json(
       {
         message: "Course created",
@@ -88,6 +92,7 @@ export async function POST(request: Request) {
           slug: course.slug,
           title: course.title,
           status: course.status,
+          thumbnailUrl,
         },
       },
       { status: 201 }

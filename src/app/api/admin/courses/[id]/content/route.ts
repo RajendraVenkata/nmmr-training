@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Course } from "@/lib/models/Course";
+import { LessonContent } from "@/lib/models/LessonContent";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,49 @@ export async function PUT(
 
     await connectDB();
 
+    // Get current course to find removed lessons
+    const currentCourse = await Course.findById(id).lean();
+    if (!currentCourse) {
+      return NextResponse.json(
+        { error: "Course not found" },
+        { status: 404 }
+      );
+    }
+
+    // Collect current lesson IDs
+    const currentLessonIds = new Set<string>();
+    for (const mod of currentCourse.modules || []) {
+      for (const lesson of mod.lessons || []) {
+        currentLessonIds.add(lesson._id.toString());
+      }
+    }
+
+    // Collect new lesson IDs (lessons that have _id)
+    const newLessonIds = new Set<string>();
+    for (const mod of modules) {
+      for (const lesson of mod.lessons || []) {
+        if (lesson._id) {
+          newLessonIds.add(lesson._id.toString());
+        }
+      }
+    }
+
+    // Find removed lesson IDs
+    const removedLessonIds: string[] = [];
+    for (const lessonId of Array.from(currentLessonIds)) {
+      if (!newLessonIds.has(lessonId)) {
+        removedLessonIds.push(lessonId);
+      }
+    }
+
+    // Delete LessonContent for removed lessons
+    if (removedLessonIds.length > 0) {
+      await LessonContent.deleteMany({
+        courseId: id,
+        lessonId: { $in: removedLessonIds },
+      });
+    }
+
     const course = await Course.findByIdAndUpdate(
       id,
       { modules },
@@ -54,6 +98,32 @@ export async function PUT(
       );
     }
 
+    // Get content status for each lesson
+    const contentDocs = await LessonContent.find(
+      { courseId: id },
+      { lessonId: 1, type: 1, updatedAt: 1 }
+    ).lean();
+
+    const contentMap = new Map(
+      contentDocs.map((d) => [
+        d.lessonId.toString(),
+        { type: d.type, updatedAt: d.updatedAt },
+      ])
+    );
+
+    const lessonStatuses = [];
+    for (const mod of course.modules) {
+      for (const lesson of mod.lessons) {
+        const status = contentMap.get(lesson._id.toString());
+        lessonStatuses.push({
+          lessonId: lesson._id.toString(),
+          hasContent: !!status,
+          contentType: status?.type || null,
+          lastUpdated: status?.updatedAt || null,
+        });
+      }
+    }
+
     return NextResponse.json({
       message: "Content updated",
       modulesCount: course.modules.length,
@@ -62,6 +132,8 @@ export async function PUT(
           acc + (m.lessons?.length || 0),
         0
       ),
+      removedLessons: removedLessonIds.length,
+      lessonStatuses,
     });
   } catch (error) {
     console.error("Admin content update error:", error);

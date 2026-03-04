@@ -22,7 +22,9 @@ export interface User {
 
 export type CourseStatus = "draft" | "published" | "archived";
 export type CourseDifficulty = "beginner" | "intermediate" | "advanced";
-export type LessonType = "video" | "document" | "quiz" | "markdown";
+export type LessonType = "markdown" | "document" | "quiz" | "image";
+export type QuestionType = "multiple-choice" | "multi-select" | "true-false";
+export type ImagePurpose = "thumbnail" | "banner" | "inline" | "instructor";
 export type CourseCategory =
   | "GenAI"
   | "Agentic AI"
@@ -36,6 +38,7 @@ export interface Lesson {
   title: string;
   type: LessonType;
   content: string;
+  contentRef?: string;
   duration: string;
   order: number;
   isFree: boolean;
@@ -55,6 +58,7 @@ export interface Course {
   description: string;
   longDescription: string;
   thumbnail: string;
+  thumbnailRef?: string;
   price: number;
   currency: string;
   category: CourseCategory;
@@ -62,6 +66,8 @@ export interface Course {
   duration: string;
   status: CourseStatus;
   instructor: string;
+  tags: string[];
+  prerequisites: string[];
   modules: Module[];
   createdAt: Date;
   updatedAt: Date;
@@ -236,6 +242,7 @@ export interface CourseDetail {
   description: string;
   longDescription: string;
   thumbnail: string;
+  thumbnailUrl?: string;
   price: number;
   currency: string;
   category: string;
@@ -243,6 +250,8 @@ export interface CourseDetail {
   duration: string;
   status: CourseStatus;
   instructor: string;
+  tags: string[];
+  prerequisites: string[];
   lessonsCount: number;
   modules: {
     id: string;
@@ -252,10 +261,101 @@ export interface CourseDetail {
       id: string;
       title: string;
       type: LessonType;
-      content: string;
       duration: string;
       order: number;
       isFree: boolean;
+      hasContent: boolean;
     }[];
   }[];
+}
+
+// ============================================================
+// Quiz Types
+// ============================================================
+
+export interface QuizOption {
+  text: string;
+  isCorrect?: boolean;
+  order?: number;
+}
+
+export interface QuizQuestion {
+  questionText: string;
+  questionType: QuestionType;
+  options: QuizOption[];
+  explanation?: string;
+  order?: number;
+}
+
+export interface QuizData {
+  title: string;
+  description?: string;
+  passingScore: number;
+  shuffleQuestions?: boolean;
+  questions: QuizQuestion[];
+}
+
+export interface QuizAttempt {
+  lessonId: string;
+  answers: { questionIndex: number; selectedOptions: number[] }[];
+  score: number;
+  passed: boolean;
+  attemptedAt: string;
+}
+
+// ============================================================
+// Lesson Content Types
+// ============================================================
+
+export interface LessonImageData {
+  base64: string;
+  mimeType: string;
+  altText: string;
+  caption: string;
+}
+
+export interface InlineImage {
+  id: string;
+  base64: string;
+  mimeType: string;
+  altText: string;
+}
+
+export interface LessonContentData {
+  id: string;
+  courseId: string;
+  lessonId: string;
+  type: LessonType;
+  markdownContent?: string;
+  quizData?: QuizData;
+  imageData?: LessonImageData;
+  inlineImages?: InlineImage[];
+}
+
+// ============================================================
+// Course Image Types
+// ============================================================
+
+export interface CourseImageData {
+  id: string;
+  courseId?: string;
+  purpose: ImagePurpose;
+  filename: string;
+  mimeType: string;
+  base64: string;
+  width?: number;
+  height?: number;
+  sizeBytes: number;
+  altText: string;
+}
+
+export interface CourseImageMeta {
+  id: string;
+  courseId?: string;
+  purpose: ImagePurpose;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  altText: string;
+  createdAt: string;
 }

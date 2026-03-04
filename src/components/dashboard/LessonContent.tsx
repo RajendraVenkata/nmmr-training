@@ -1,12 +1,14 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
-  PlayCircle,
   FileText,
   HelpCircle,
+  ImageIcon,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -14,53 +16,51 @@ import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { LessonType } from "@/types";
+import { QuizPlayer } from "./QuizPlayer";
+import { ImageLesson } from "./ImageLesson";
+import type { LessonType, QuizData } from "@/types";
 
 interface LessonContentProps {
+  courseSlug: string;
   lesson: {
     id: string;
     title: string;
     type: LessonType;
     duration: string;
+    hasContent?: boolean;
   };
-  content: string;
+  enrollmentId: string;
   isCompleted: boolean;
   onMarkComplete: () => void;
   onNext: (() => void) | null;
   onPrevious: (() => void) | null;
 }
 
-function VideoPlaceholder() {
-  return (
-    <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center gap-3 border">
-      <PlayCircle className="h-16 w-16 text-muted-foreground/50" />
-      <p className="text-sm text-muted-foreground text-center px-4">
-        Video player will be available when course content is uploaded.
-      </p>
-    </div>
-  );
+interface ContentData {
+  type: string;
+  markdownContent?: string;
+  quizData?: QuizData;
+  imageData?: {
+    imageUrl: string;
+    altText: string;
+    caption?: string;
+  };
 }
 
-function DocumentPlaceholder() {
+function ContentPlaceholder({ type }: { type: LessonType }) {
+  const icons: Record<string, React.ReactNode> = {
+    markdown: <FileText className="h-16 w-16 text-muted-foreground/50" />,
+    document: <FileText className="h-16 w-16 text-muted-foreground/50" />,
+    quiz: <HelpCircle className="h-16 w-16 text-muted-foreground/50" />,
+    image: <ImageIcon className="h-16 w-16 text-muted-foreground/50" />,
+  };
+
   return (
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-16 gap-3">
-        <FileText className="h-16 w-16 text-muted-foreground/50" />
+        {icons[type]}
         <p className="text-sm text-muted-foreground text-center">
-          Document viewer will be available when content is uploaded.
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function QuizPlaceholder() {
-  return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-16 gap-3">
-        <HelpCircle className="h-16 w-16 text-muted-foreground/50" />
-        <p className="text-sm text-muted-foreground text-center">
-          Interactive quiz will be available once questions are configured.
+          Content is not yet available for this lesson.
         </p>
       </CardContent>
     </Card>
@@ -107,13 +107,35 @@ function MarkdownContent({ content }: { content: string }) {
 }
 
 export function LessonContent({
+  courseSlug,
   lesson,
-  content,
+  enrollmentId,
   isCompleted,
   onMarkComplete,
   onNext,
   onPrevious,
 }: LessonContentProps) {
+  const [content, setContent] = useState<ContentData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    setContent(null);
+    setError(false);
+
+    if (!lesson.hasContent) return;
+
+    setLoading(true);
+    fetch(`/api/courses/${courseSlug}/lessons/${lesson.id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load");
+        return res.json();
+      })
+      .then((data) => setContent(data))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [courseSlug, lesson.id, lesson.hasContent]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -128,10 +150,69 @@ export function LessonContent({
         <h2 className="text-xl font-bold">{lesson.title}</h2>
       </div>
 
-      {lesson.type === "video" && <VideoPlaceholder />}
-      {lesson.type === "document" && <DocumentPlaceholder />}
-      {lesson.type === "quiz" && <QuizPlaceholder />}
-      {lesson.type === "markdown" && <MarkdownContent content={content} />}
+      {loading && (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {error && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 gap-3">
+            <p className="text-sm text-destructive">
+              Failed to load lesson content.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setError(false);
+                setLoading(true);
+                fetch(`/api/courses/${courseSlug}/lessons/${lesson.id}`)
+                  .then((res) => {
+                    if (!res.ok) throw new Error("Failed");
+                    return res.json();
+                  })
+                  .then((data) => setContent(data))
+                  .catch(() => setError(true))
+                  .finally(() => setLoading(false));
+              }}
+            >
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {!loading && !error && !content && (
+        <ContentPlaceholder type={lesson.type} />
+      )}
+
+      {!loading && !error && content && (
+        <>
+          {(content.type === "markdown" || content.type === "document") &&
+            content.markdownContent && (
+              <MarkdownContent content={content.markdownContent} />
+            )}
+
+          {content.type === "quiz" && content.quizData && (
+            <QuizPlayer
+              quiz={content.quizData}
+              enrollmentId={enrollmentId}
+              lessonId={lesson.id}
+              onPass={onMarkComplete}
+            />
+          )}
+
+          {content.type === "image" && content.imageData && (
+            <ImageLesson
+              imageUrl={content.imageData.imageUrl}
+              altText={content.imageData.altText}
+              caption={content.imageData.caption}
+            />
+          )}
+        </>
+      )}
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t">
         <div>
@@ -140,12 +221,12 @@ export function LessonContent({
               <CheckCircle2 className="h-3.5 w-3.5" />
               Completed
             </Badge>
-          ) : (
+          ) : lesson.type !== "quiz" ? (
             <Button onClick={onMarkComplete} variant="outline" size="sm">
               <CheckCircle2 className="h-4 w-4 mr-1.5" />
               Mark as Complete
             </Button>
-          )}
+          ) : null}
         </div>
 
         <div className="flex items-center gap-2">

@@ -204,8 +204,9 @@ export default function CoursePlayerPage() {
 
         {currentLesson && (
           <LessonContent
+            courseSlug={slug}
             lesson={currentLesson}
-            content={currentLesson.content || ""}
+            enrollmentId={enrollment.id}
             isCompleted={completedLessons.has(currentLessonId)}
             onMarkComplete={handleMarkComplete}
             onNext={handleNext}

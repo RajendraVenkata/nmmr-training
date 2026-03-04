@@ -50,7 +50,7 @@ export function LessonFormDialog({
     resolver: zodResolver(lessonFormSchema),
     defaultValues: {
       title: "",
-      type: "video",
+      type: "markdown",
       content: "",
       duration: "",
       isFree: false,
@@ -58,7 +58,6 @@ export function LessonFormDialog({
     },
   });
 
-  const lessonType = watch("type");
   const isFree = watch("isFree");
 
   const handleFormSubmit = handleSubmit((data) => {
@@ -100,7 +99,7 @@ export function LessonFormDialog({
               <div className="space-y-2">
                 <Label>Type</Label>
                 <Select
-                  defaultValue={defaultValues?.type || "video"}
+                  defaultValue={defaultValues?.type || "markdown"}
                   onValueChange={(v) =>
                     setValue("type", v as LessonFormData["type"])
                   }
@@ -109,10 +108,10 @@ export function LessonFormDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="video">Video</SelectItem>
                     <SelectItem value="markdown">Markdown</SelectItem>
                     <SelectItem value="document">Document</SelectItem>
                     <SelectItem value="quiz">Quiz</SelectItem>
+                    <SelectItem value="image">Image</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -134,28 +133,18 @@ export function LessonFormDialog({
 
             <div className="space-y-2">
               <Label htmlFor="content">
-                {lessonType === "markdown"
-                  ? "Content (Markdown)"
-                  : lessonType === "video"
-                    ? "Video URL"
-                    : lessonType === "document"
-                      ? "Document URL"
-                      : "Quiz Data (JSON)"}
+                Short Description / Preview
               </Label>
               <Textarea
                 id="content"
                 {...register("content")}
-                placeholder={
-                  lessonType === "markdown"
-                    ? "Write your lesson content in markdown..."
-                    : lessonType === "video"
-                      ? "https://example.com/video.mp4"
-                      : lessonType === "document"
-                        ? "https://example.com/doc.pdf"
-                        : '{"questions": [...]}'
-                }
-                rows={lessonType === "markdown" ? 6 : 2}
+                placeholder="Brief summary of this lesson (optional, max 500 chars)"
+                rows={2}
+                maxLength={500}
               />
+              <p className="text-xs text-muted-foreground">
+                Full content is edited separately via the &quot;Edit Content&quot; button after saving.
+              </p>
             </div>
 
             <div className="flex items-center gap-2">

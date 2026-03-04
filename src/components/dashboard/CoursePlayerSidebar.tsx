@@ -3,10 +3,10 @@
 import {
   CheckCircle2,
   Circle,
-  PlayCircle,
   FileText,
   HelpCircle,
   BookOpen,
+  ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
@@ -36,10 +36,10 @@ interface CoursePlayerSidebarProps {
 }
 
 const lessonIcons: Record<string, React.ReactNode> = {
-  video: <PlayCircle className="h-3.5 w-3.5" />,
+  markdown: <BookOpen className="h-3.5 w-3.5" />,
   document: <FileText className="h-3.5 w-3.5" />,
   quiz: <HelpCircle className="h-3.5 w-3.5" />,
-  markdown: <BookOpen className="h-3.5 w-3.5" />,
+  image: <ImageIcon className="h-3.5 w-3.5" />,
 };
 
 export function CoursePlayerSidebar({

@@ -390,5 +390,514 @@
 | Phase 7 | Deployment | Phase 1-6 | DevOps |
 | Phase 8 | Sample Data & Testing | Phase 1-7 | QA |
 | **Phase 9** | **Payment Integration** | **Phase 2, 3, 4** | **Optional** |
+| **Phase 10** | **MongoDB Content-First (No Videos)** | **Phase 1-5** | **Core** |
 
 > **Note:** Phase 9 (Payment Integration) is fully optional. Without it, all courses can be offered as free, or enrollment can be managed manually by admins. Payment can be added at any time after Phase 4 is complete.
+
+---
+
+## Phase 10: MongoDB Content-First Architecture (All Content in DB, No Videos) ✅ COMPLETED
+
+> **Goal:** Move all course content (lesson text, images, quiz data) into MongoDB so the database is the single source of truth. Images are stored as base64 data URIs. No video support — lesson types are `markdown`, `document`, `quiz`, and `image`. The admin UI gets a full content editor with image upload, markdown editing, and quiz building.
+
+### Current State Analysis
+
+**What exists today:**
+- Course model (`src/lib/models/Course.ts`) has `modules → lessons` nested structure
+- Lesson `content` field is a plain string (markdown text or empty)
+- Lesson `type` is `"video" | "document" | "quiz" | "markdown"` but only markdown actually renders content
+- Video, document, and quiz types show placeholder UIs
+- Sample data (`src/data/sample-lesson-content.ts`) has markdown content for 6 lessons
+- Admin content editor (`src/app/admin/courses/[id]/content/page.tsx`) manages module/lesson metadata but **cannot edit lesson content**
+- All lesson content is loaded at once with the course (no lazy loading)
+- No image handling exists
+
+**What changes:**
+- Remove `video` lesson type entirely (no video support)
+- Add `image` lesson type (base64 images with caption/description)
+- Enhance `quiz` type with structured quiz data (questions, options, correct answers)
+- Add `LessonContent` collection for large content (separate from Course document to avoid 16MB limit)
+- Add `CourseImage` collection for base64-encoded images (thumbnails, inline images)
+- Admin gets rich content editors: markdown editor with image embed, quiz builder, document editor
+- Learner player renders all content types from MongoDB
+- Lazy-load lesson content on demand instead of all-at-once
+
+---
+
+### 10.1 Schema Design & Models
+
+#### `src/lib/models/Course.ts` — Update Course/Lesson Schema
+- [ ] Remove `"video"` from `ILesson.type` enum, add `"image"` type
+  - New type enum: `"markdown" | "document" | "quiz" | "image"`
+- [ ] Add `contentRef: ObjectId` field to `ILesson` — reference to `LessonContent` collection (for lazy loading)
+- [ ] Add `thumbnailRef: ObjectId` optional field to `ICourse` — reference to `CourseImage` for course thumbnail
+- [ ] Keep existing `content` field on `ILesson` as a short summary/preview (max 500 chars)
+- [ ] Add `tags: string[]` optional field to `ICourse` for better search/filtering
+- [ ] Add `prerequisites: string[]` optional field to `ICourse` (list of course slugs)
+
+#### `src/lib/models/LessonContent.ts` — **NEW** Lesson Content Collection
+- [ ] Create new Mongoose model for storing full lesson content separately from the Course document
+- [ ] Schema fields:
+  - `courseId: ObjectId` (ref to Course)
+  - `lessonId: ObjectId` (matches the _id of the lesson subdocument in Course)
+  - `type: "markdown" | "document" | "quiz" | "image"` (mirrors lesson type)
+  - `markdownContent: string` (for markdown/document types — full markdown text)
+  - `quizData: IQuizData` (for quiz type — structured quiz object, see below)
+  - `imageData: { base64: string, mimeType: string, altText: string, caption: string }` (for image type)
+  - `inlineImages: [{ id: string, base64: string, mimeType: string, altText: string }]` (images embedded in markdown via `![alt](inline:imageId)`)
+  - `version: number` (content versioning, default 1)
+  - `updatedBy: ObjectId` (ref to User who last edited)
+  - `createdAt, updatedAt` (timestamps)
+- [ ] Add compound index on `(courseId, lessonId)` — unique
+- [ ] Add index on `courseId` for bulk operations
+
+#### `src/lib/models/QuizSchema.ts` — **NEW** Embedded Quiz Sub-Schema
+- [ ] Create reusable quiz sub-schema (not a standalone collection, embedded in `LessonContent.quizData`):
+  - `title: string`
+  - `description: string`
+  - `passingScore: number` (percentage, e.g., 70)
+  - `shuffleQuestions: boolean`
+  - `questions: IQuestion[]`
+- [ ] `IQuestion` sub-schema:
+  - `questionText: string` (supports markdown)
+  - `questionType: "multiple-choice" | "multi-select" | "true-false"`
+  - `options: IOption[]`
+  - `explanation: string` (shown after answering — explains correct answer)
+  - `order: number`
+- [ ] `IOption` sub-schema:
+  - `text: string`
+  - `isCorrect: boolean`
+  - `order: number`
+
+#### `src/lib/models/CourseImage.ts` — **NEW** Image Storage Collection
+- [ ] Create Mongoose model for storing base64-encoded images:
+  - `courseId: ObjectId` (ref to Course, nullable for shared/global images)
+  - `purpose: "thumbnail" | "banner" | "inline" | "instructor"` (what the image is used for)
+  - `filename: string` (original filename for display)
+  - `mimeType: string` (image/png, image/jpeg, image/webp, image/svg+xml)
+  - `base64: string` (base64-encoded image data)
+  - `width: number` (optional, for layout hints)
+  - `height: number` (optional, for layout hints)
+  - `sizeBytes: number` (original file size for tracking)
+  - `altText: string` (accessibility)
+  - `uploadedBy: ObjectId` (ref to User)
+  - `createdAt, updatedAt` (timestamps)
+- [ ] Add index on `courseId`
+- [ ] Add index on `purpose`
+- [ ] Add validation: max 2MB per image (base64 encoded ~2.7MB), only allow image/* mimeTypes
+
+---
+
+### 10.2 TypeScript Types Update
+
+#### `src/types/index.ts` — Update & Add Types
+- [ ] Update `LessonType` to `"markdown" | "document" | "quiz" | "image"` (remove `"video"`)
+- [ ] Add `QuizData` interface:
+  ```
+  QuizData { title, description, passingScore, shuffleQuestions, questions: Question[] }
+  ```
+- [ ] Add `Question` interface:
+  ```
+  Question { questionText, questionType: "multiple-choice" | "multi-select" | "true-false", options: Option[], explanation, order }
+  ```
+- [ ] Add `Option` interface:
+  ```
+  Option { text, isCorrect, order }
+  ```
+- [ ] Add `LessonContentData` interface (API response shape for lesson content):
+  ```
+  LessonContentData { id, courseId, lessonId, type, markdownContent?, quizData?, imageData?, inlineImages? }
+  ```
+- [ ] Add `CourseImageData` interface:
+  ```
+  CourseImageData { id, courseId, purpose, filename, mimeType, base64, width?, height?, sizeBytes, altText }
+  ```
+- [ ] Add `QuizAttempt` interface (for tracking quiz submissions):
+  ```
+  QuizAttempt { lessonId, answers: { questionIndex, selectedOptions }[], score, passed, attemptedAt }
+  ```
+- [ ] Update `Lesson` interface: add `contentRef` optional field, remove `content` or make it a short preview
+- [ ] Update `CourseDetail` response type: lesson data should not include full content (only title, type, duration, isFree, contentRef)
+
+---
+
+### 10.3 Validators & Zod Schemas
+
+#### `src/lib/validators.ts` — Add Content Validation Schemas
+- [ ] Add `lessonContentSchema` — validates content payload based on lesson type:
+  - For `markdown`: `markdownContent` required (min 1 char, max 500KB string)
+  - For `document`: `markdownContent` required (same as markdown, but semantic distinction)
+  - For `quiz`: `quizData` required, validate nested questions/options structure
+  - For `image`: `imageData` required with base64, mimeType, altText
+- [ ] Add `quizDataSchema` — validates quiz structure:
+  - `title` required (3-200 chars)
+  - `passingScore` between 0-100
+  - `questions` array (min 1, max 50)
+  - Each question: `questionText` required, `options` array (min 2, max 6), at least 1 correct option
+  - For `true-false`: exactly 2 options
+- [ ] Add `imageUploadSchema` — validates image upload:
+  - `base64` required
+  - `mimeType` must be one of `image/png`, `image/jpeg`, `image/webp`, `image/gif`, `image/svg+xml`
+  - `sizeBytes` max 2MB (2_097_152)
+  - `altText` required (3-200 chars)
+- [ ] Update `lessonFormSchema` — change type enum to remove `"video"`, add `"image"`
+
+---
+
+### 10.4 API Routes — Lesson Content
+
+#### `src/app/api/courses/[slug]/lessons/[lessonId]/route.ts` — **NEW** Get Single Lesson Content
+- [ ] `GET` — fetch lesson content on demand (lazy loading):
+  - Validate course exists and is published
+  - Validate lesson exists in the course
+  - Check if lesson `isFree` OR user is enrolled
+  - Fetch from `LessonContent` collection by `courseId + lessonId`
+  - For markdown: return `markdownContent` with inline image references resolved
+  - For quiz: return `quizData` (without `isCorrect` flags if not yet submitted — or always include for client-side grading)
+  - For image: return full `imageData`
+  - Return 403 if lesson is not free and user is not enrolled
+  - Return 404 if content not found (lesson exists but no content uploaded yet)
+
+#### `src/app/api/admin/courses/[id]/lessons/[lessonId]/content/route.ts` — **NEW** Admin: Create/Update Lesson Content
+- [ ] `PUT` — create or upsert lesson content:
+  - Require admin role
+  - Validate lesson exists in the course's modules
+  - Validate content payload against `lessonContentSchema` based on lesson type
+  - Upsert into `LessonContent` collection (courseId + lessonId as unique key)
+  - Update `contentRef` on the lesson subdocument in Course
+  - Set `updatedBy` to current admin user
+  - Return saved content
+- [ ] `GET` — fetch lesson content for admin editing:
+  - Require admin role
+  - Return full content including all fields
+- [ ] `DELETE` — remove lesson content:
+  - Require admin role
+  - Delete from `LessonContent` collection
+  - Clear `contentRef` on the lesson subdocument
+  - Also delete any orphaned inline images
+
+---
+
+### 10.5 API Routes — Image Management
+
+#### `src/app/api/admin/images/route.ts` — **NEW** Admin: Upload & List Images
+- [ ] `POST` — upload a new image:
+  - Require admin role
+  - Accept: `{ courseId?, purpose, filename, base64, mimeType, altText, width?, height? }`
+  - Validate against `imageUploadSchema`
+  - Calculate `sizeBytes` from base64 data
+  - Save to `CourseImage` collection
+  - Return image ID and metadata
+- [ ] `GET` — list images:
+  - Require admin role
+  - Query params: `courseId` (optional), `purpose` (optional)
+  - Return image metadata (ID, filename, purpose, sizeBytes, altText) — NOT base64 data (too large for listing)
+  - Paginate (default 20 per page)
+
+#### `src/app/api/admin/images/[imageId]/route.ts` — **NEW** Admin: Get/Delete Individual Image
+- [ ] `GET` — fetch image with base64 data (for admin preview or embedding)
+  - Require admin role
+  - Return full image data including base64
+- [ ] `DELETE` — delete image:
+  - Require admin role
+  - Check if image is referenced by any course thumbnail or lesson content
+  - If referenced, return 409 Conflict with list of referencing entities
+  - If not referenced, delete
+
+#### `src/app/api/images/[imageId]/route.ts` — **NEW** Public: Serve Image
+- [ ] `GET` — serve image as binary response (for `<img src>` usage):
+  - Decode base64 to binary buffer
+  - Set `Content-Type` header from `mimeType`
+  - Set cache headers (e.g., `Cache-Control: public, max-age=86400`)
+  - Return binary image data
+  - This allows `<img src="/api/images/{imageId}">` in lesson content and course thumbnails
+
+---
+
+### 10.6 API Routes — Quiz Submission
+
+#### `src/app/api/enrollments/[id]/quiz/route.ts` — **NEW** Submit Quiz Answers
+- [ ] `POST` — submit quiz attempt:
+  - Validate user is enrolled
+  - Accept: `{ lessonId, answers: [{ questionIndex, selectedOptions: number[] }] }`
+  - Fetch quiz data from `LessonContent`
+  - Grade: compare `selectedOptions` against `isCorrect` flags
+  - Calculate score percentage
+  - Determine pass/fail based on `passingScore`
+  - If passed and lesson not already completed, mark lesson as complete (update enrollment progress)
+  - Return: `{ score, passed, totalQuestions, correctAnswers, results: [{ correct, explanation }] }`
+- [ ] `GET` — get quiz attempt history for a lesson:
+  - Return previous attempts (score, passed, attemptedAt) for the given lessonId
+
+---
+
+### 10.7 Update Existing API Routes
+
+#### `src/app/api/courses/[slug]/route.ts` — Modify Course Detail Response
+- [ ] Change response to **exclude full lesson content** — only return lesson metadata (title, type, duration, isFree, contentRef)
+- [ ] Include course thumbnail as a URL (`/api/images/{thumbnailRef}`) instead of a file path
+- [ ] Add lesson content availability flag: `hasContent: boolean` (whether LessonContent exists for this lesson)
+
+#### `src/app/api/admin/courses/[id]/content/route.ts` — Update Admin Content Save
+- [ ] When modules/lessons are restructured (reorder, add, delete), handle `LessonContent` cleanup:
+  - If a lesson is deleted, also delete its `LessonContent` document
+  - If a module is deleted, delete `LessonContent` for all its lessons
+- [ ] Return content status for each lesson: `{ lessonId, hasContent, contentType, lastUpdated }`
+
+#### `src/app/api/admin/courses/route.ts` — Update Course Creation
+- [ ] When creating a course, allow optional `thumbnailRef` for course image
+- [ ] Return image URL in the response
+
+#### `src/app/api/courses/route.ts` — Update Public Course Listing
+- [ ] Replace thumbnail file paths with `/api/images/{thumbnailRef}` URLs
+- [ ] Add `totalContentLessons` count (lessons that have content uploaded) alongside `lessonsCount`
+
+---
+
+### 10.8 Sample Data Migration
+
+#### `src/data/sample-courses.ts` — Update Sample Data
+- [ ] Remove `"video"` type lessons — change to `"markdown"` or `"document"`
+- [ ] Add sample `"quiz"` lessons with proper quiz structure references
+- [ ] Add sample `"image"` lessons
+- [ ] Update lesson type references throughout
+
+#### `src/data/sample-lesson-content.ts` — Expand Sample Content
+- [ ] Add sample content entries for all 6 courses (currently only has 6 lessons covered)
+- [ ] Add sample quiz data (at least 2 quizzes with 5 questions each)
+- [ ] Add sample image lesson data (placeholder base64 image)
+- [ ] Structure sample data to match the new `LessonContent` schema shape
+
+#### `src/data/sample-quiz-data.ts` — **NEW** Sample Quiz Data
+- [ ] Create sample quiz data for "Quiz: AI Fundamentals" (l4) with 5 multiple-choice questions
+- [ ] Create sample quiz data for quiz lessons in other courses
+- [ ] Include varied question types: multiple-choice, multi-select, true-false
+- [ ] Include explanations for each question
+
+#### `scripts/seed-content.ts` — **NEW** Database Seeding Script for Content
+- [ ] Script to seed `LessonContent` collection from sample data
+- [ ] Script to seed `CourseImage` collection with placeholder thumbnails
+- [ ] Script to update existing Course documents with `contentRef` and `thumbnailRef`
+- [ ] Idempotent (safe to run multiple times — upserts)
+- [ ] Can be run standalone: `npx ts-node scripts/seed-content.ts`
+
+---
+
+### 10.9 Admin UI — Content Editors
+
+#### `src/components/admin/MarkdownEditor.tsx` — **NEW** Markdown Editor Component
+- [ ] Rich markdown editor with:
+  - Toolbar: bold, italic, heading, list, code block, link, image embed
+  - Live preview panel (side-by-side or toggle)
+  - Syntax highlighting in code blocks
+  - Image upload button → uploads to `CourseImage` collection → inserts `![alt](/api/images/{id})` into markdown
+  - Drag-and-drop image upload support
+  - Character/word count
+- [ ] Accept `value` and `onChange` props for controlled usage
+- [ ] Use a lightweight editor library (e.g., `@uiw/react-md-editor` or build with `textarea` + `react-markdown` preview)
+
+#### `src/components/admin/QuizBuilder.tsx` — **NEW** Quiz Builder Component
+- [ ] Interactive quiz creation form:
+  - Quiz title and description fields
+  - Passing score slider/input (0-100%)
+  - Shuffle questions toggle
+  - "Add Question" button
+- [ ] Per-question editor:
+  - Question text (markdown-enabled input)
+  - Question type selector (multiple-choice, multi-select, true-false)
+  - Options editor: add/remove options, mark correct answer(s)
+  - Explanation field (shown after grading)
+  - Drag-and-drop reordering of questions
+- [ ] Validation: at least 1 question, each question needs 2+ options, at least 1 correct option
+- [ ] Preview mode: show quiz as the learner would see it
+
+#### `src/components/admin/ImageUploader.tsx` — **NEW** Image Upload Component
+- [ ] Image upload via file picker or drag-and-drop
+- [ ] Client-side image preview before upload
+- [ ] Client-side validation: file type (png, jpg, webp, gif, svg), max 2MB
+- [ ] Convert to base64 on client side using `FileReader`
+- [ ] Alt text input field (required)
+- [ ] Caption input field (optional)
+- [ ] Upload to `/api/admin/images` endpoint
+- [ ] Return image ID for embedding in markdown or lesson content
+
+#### `src/components/admin/ImageLessonEditor.tsx` — **NEW** Image Lesson Editor
+- [ ] For lesson type `"image"`:
+  - Image upload area (uses `ImageUploader`)
+  - Caption field
+  - Description/annotation field (markdown)
+- [ ] Preview of the image as the learner would see it
+
+#### `src/components/admin/DocumentEditor.tsx` — **NEW** Document/Rich Text Editor
+- [ ] For lesson type `"document"`:
+  - Full-featured markdown editor (reuses `MarkdownEditor`)
+  - Distinct from `"markdown"` type semantically (documents are typically longer, may include diagrams)
+  - Image embedding support
+
+#### `src/app/admin/courses/[id]/content/page.tsx` — Update Content Management Page
+- [ ] Add "Edit Content" button next to each lesson in the module/lesson list
+- [ ] Clicking "Edit Content" opens the appropriate editor based on lesson type:
+  - `markdown` → `MarkdownEditor`
+  - `document` → `DocumentEditor`
+  - `quiz` → `QuizBuilder`
+  - `image` → `ImageLessonEditor`
+- [ ] Show content status indicator per lesson: green checkmark (has content), grey dash (no content yet)
+- [ ] Save content via `PUT /api/admin/courses/{id}/lessons/{lessonId}/content`
+- [ ] Show last-updated timestamp per lesson content
+
+#### `src/app/admin/courses/[id]/lessons/[lessonId]/edit/page.tsx` — **NEW** Dedicated Lesson Content Edit Page
+- [ ] Full-page editor for lesson content (alternative to inline editing in content page)
+- [ ] Breadcrumb: Admin > Courses > {Course Title} > {Module Title} > {Lesson Title}
+- [ ] Load existing content from API
+- [ ] Render appropriate editor component based on lesson type
+- [ ] Save / Cancel / Preview buttons
+- [ ] Autosave draft (optional enhancement)
+
+#### `src/components/admin/CourseForm.tsx` — Update Course Form
+- [ ] Replace thumbnail file path input with `ImageUploader` component
+- [ ] Upload thumbnail to `CourseImage` collection with `purpose: "thumbnail"`
+- [ ] Store `thumbnailRef` on the course document
+- [ ] Show current thumbnail preview
+
+---
+
+### 10.10 Learner UI — Content Rendering
+
+#### `src/components/dashboard/LessonContent.tsx` — Update Lesson Content Renderer
+- [ ] Change from receiving all content upfront to fetching on demand:
+  - Call `GET /api/courses/{slug}/lessons/{lessonId}` when lesson is selected
+  - Show loading skeleton while content loads
+  - Cache fetched content in state to avoid re-fetching when navigating back
+- [ ] Remove video type handling (no more `VideoPlaceholder`)
+- [ ] Add image lesson rendering: display base64 image with caption and description
+- [ ] Improve markdown rendering: handle inline images via `/api/images/{id}` URLs
+
+#### `src/components/dashboard/QuizPlayer.tsx` — **NEW** Interactive Quiz Component
+- [ ] Display quiz questions one-at-a-time or all-at-once (based on quiz settings)
+- [ ] Multiple choice: radio buttons for single select
+- [ ] Multi-select: checkboxes for multiple correct answers
+- [ ] True/false: two radio buttons
+- [ ] "Submit Quiz" button
+- [ ] Grading: submit answers to `POST /api/enrollments/{id}/quiz`
+- [ ] Results display: score, pass/fail, per-question results with explanations
+- [ ] "Retry" button if failed
+- [ ] If passed, auto-mark lesson as complete
+
+#### `src/components/dashboard/ImageLesson.tsx` — **NEW** Image Lesson Display
+- [ ] Display full-size image with responsive sizing
+- [ ] Show caption and description (markdown rendered)
+- [ ] Zoom/lightbox functionality (optional)
+- [ ] "Mark as Complete" button
+
+#### `src/app/dashboard/courses/[slug]/page.tsx` — Update Course Player Page
+- [ ] Remove upfront loading of all lesson content
+- [ ] Fetch lesson content on demand when lesson is selected
+- [ ] Update sidebar to show content type icons (markdown=file, quiz=question-mark, image=picture, document=book)
+- [ ] Handle quiz completion: update sidebar checkmark when quiz is passed
+
+---
+
+### 10.11 Migration & Cleanup
+
+#### `src/lib/models/index.ts` — **NEW** Model Registry
+- [ ] Create barrel export file for all models: User, Course, Enrollment, LessonContent, CourseImage
+- [ ] Ensures all models are registered before any queries run
+
+#### `scripts/migrate-content.ts` — **NEW** Content Migration Script
+- [ ] For existing courses that have `content` directly in lesson subdocuments:
+  - Read each lesson's `content` field
+  - Create corresponding `LessonContent` document
+  - Set `contentRef` on the lesson
+  - Clear the inline `content` field (or leave as preview)
+- [ ] Idempotent migration (skip if LessonContent already exists for a lesson)
+- [ ] Dry-run mode: `--dry-run` flag to preview changes without writing
+
+#### `src/data/sample-courses.ts` — Update Development Sample Data
+- [ ] Remove `"video"` type lessons, replace with `"markdown"` or `"image"`
+- [ ] Add `contentRef` field (as string placeholder ID) to lesson data
+- [ ] Ensure sample data helper functions (`getPublishedCourses`, etc.) still work
+
+#### `src/data/sample-enrollments.ts` — Update Enrollment Sample Data
+- [ ] Add quiz attempt data for sample users
+- [ ] Update `completedLessons` to reflect new lesson IDs if any changed
+
+---
+
+### 10.12 Constants & Configuration Updates
+
+#### `src/lib/constants.ts` — Update Constants
+- [ ] Update `LESSON_TYPES` array: remove `"video"`, add `"image"`
+- [ ] Add `MAX_IMAGE_SIZE_BYTES = 2_097_152` (2MB)
+- [ ] Add `ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml"]`
+- [ ] Add `MAX_LESSON_CONTENT_SIZE = 512_000` (500KB for markdown content)
+- [ ] Add `MAX_QUIZ_QUESTIONS = 50`
+- [ ] Add `MAX_QUIZ_OPTIONS = 6`
+
+---
+
+### 10.13 Testing & Verification
+
+#### Manual Testing Checklist
+- [ ] Seed database with sample content: run `scripts/seed-content.ts`
+- [ ] Admin: Create a new course with thumbnail upload (base64 image)
+- [ ] Admin: Add modules and lessons (markdown, document, quiz, image types)
+- [ ] Admin: Edit markdown lesson content with inline image embedding
+- [ ] Admin: Build a quiz with 5+ questions (mix of MC, multi-select, true/false)
+- [ ] Admin: Upload an image lesson with caption
+- [ ] Admin: Publish the course
+- [ ] Learner: Browse and enroll in the course
+- [ ] Learner: View markdown lesson (loads on demand from MongoDB)
+- [ ] Learner: View image lesson
+- [ ] Learner: Take a quiz, verify grading works correctly
+- [ ] Learner: Retry a failed quiz
+- [ ] Learner: Verify progress tracking updates correctly after quiz pass
+- [ ] Verify course thumbnails render via `/api/images/{id}` endpoint
+- [ ] Verify inline images in markdown render correctly
+- [ ] Test with 10+ lessons to ensure lazy loading performs well
+- [ ] Test on mobile: content renders responsively
+
+---
+
+### Phase 10 — File Summary
+
+| # | File | Action | Description |
+|---|------|--------|-------------|
+| 1 | `src/lib/models/Course.ts` | Modify | Remove video type, add image type, add contentRef/thumbnailRef |
+| 2 | `src/lib/models/LessonContent.ts` | **New** | Lesson content collection (markdown, quiz, image data) |
+| 3 | `src/lib/models/QuizSchema.ts` | **New** | Quiz sub-schema (questions, options, grading) |
+| 4 | `src/lib/models/CourseImage.ts` | **New** | Base64 image storage collection |
+| 5 | `src/lib/models/index.ts` | **New** | Model barrel export/registry |
+| 6 | `src/types/index.ts` | Modify | Add quiz, lesson content, image types; remove video type |
+| 7 | `src/lib/validators.ts` | Modify | Add content, quiz, and image validation schemas |
+| 8 | `src/lib/constants.ts` | Modify | Add content size limits, allowed image types |
+| 9 | `src/app/api/courses/[slug]/lessons/[lessonId]/route.ts` | **New** | Lazy-load lesson content |
+| 10 | `src/app/api/admin/courses/[id]/lessons/[lessonId]/content/route.ts` | **New** | Admin CRUD for lesson content |
+| 11 | `src/app/api/admin/images/route.ts` | **New** | Admin image upload & listing |
+| 12 | `src/app/api/admin/images/[imageId]/route.ts` | **New** | Admin get/delete individual image |
+| 13 | `src/app/api/images/[imageId]/route.ts` | **New** | Public image serving endpoint |
+| 14 | `src/app/api/enrollments/[id]/quiz/route.ts` | **New** | Quiz submission & grading |
+| 15 | `src/app/api/courses/[slug]/route.ts` | Modify | Exclude full content, add thumbnailRef URL |
+| 16 | `src/app/api/admin/courses/[id]/content/route.ts` | Modify | Handle LessonContent cleanup on restructure |
+| 17 | `src/app/api/admin/courses/route.ts` | Modify | Support thumbnailRef |
+| 18 | `src/app/api/courses/route.ts` | Modify | Replace thumbnail paths with image API URLs |
+| 19 | `src/components/admin/MarkdownEditor.tsx` | **New** | Markdown editor with toolbar & preview |
+| 20 | `src/components/admin/QuizBuilder.tsx` | **New** | Interactive quiz creation form |
+| 21 | `src/components/admin/ImageUploader.tsx` | **New** | Image upload with base64 conversion |
+| 22 | `src/components/admin/ImageLessonEditor.tsx` | **New** | Image lesson editor (upload + caption) |
+| 23 | `src/components/admin/DocumentEditor.tsx` | **New** | Document/rich text editor |
+| 24 | `src/app/admin/courses/[id]/content/page.tsx` | Modify | Add content editors, status indicators |
+| 25 | `src/app/admin/courses/[id]/lessons/[lessonId]/edit/page.tsx` | **New** | Dedicated lesson content edit page |
+| 26 | `src/components/admin/CourseForm.tsx` | Modify | Replace thumbnail input with ImageUploader |
+| 27 | `src/components/dashboard/LessonContent.tsx` | Modify | Lazy load, remove video, add image/quiz |
+| 28 | `src/components/dashboard/QuizPlayer.tsx` | **New** | Interactive quiz taking UI |
+| 29 | `src/components/dashboard/ImageLesson.tsx` | **New** | Image lesson display component |
+| 30 | `src/app/dashboard/courses/[slug]/page.tsx` | Modify | On-demand content loading |
+| 31 | `src/data/sample-courses.ts` | Modify | Remove video types, update structure |
+| 32 | `src/data/sample-lesson-content.ts` | Modify | Expand with all content types |
+| 33 | `src/data/sample-quiz-data.ts` | **New** | Sample quiz data |
+| 34 | `scripts/seed-content.ts` | **New** | DB seeding for content & images |
+| 35 | `scripts/migrate-content.ts` | **New** | Migrate inline content to LessonContent |
+
+> **Dependency:** Phase 10 requires Phases 1-5 to be complete. It can be done in parallel with Phases 6-9.
+> **New collections:** `lessoncontent`, `courseimages` in the `nmmr-training` database.
+> **No video support:** This phase intentionally removes video. Video streaming can be added as a future phase if needed.

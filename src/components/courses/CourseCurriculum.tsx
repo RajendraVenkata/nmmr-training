@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, PlayCircle, FileText, HelpCircle, BookOpen, Lock } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, HelpCircle, BookOpen, ImageIcon, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Lesson {
   id: string;
   title: string;
-  type: "video" | "document" | "quiz" | "markdown";
+  type: "markdown" | "document" | "quiz" | "image";
   duration: string;
   order: number;
   isFree: boolean;
@@ -25,10 +25,10 @@ interface CourseCurriculumProps {
 }
 
 const lessonIcons = {
-  video: PlayCircle,
+  markdown: BookOpen,
   document: FileText,
   quiz: HelpCircle,
-  markdown: BookOpen,
+  image: ImageIcon,
 };
 
 export function CourseCurriculum({ modules }: CourseCurriculumProps) {

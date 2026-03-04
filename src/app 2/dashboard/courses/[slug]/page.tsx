@@ -18,7 +18,6 @@ import {
   getEnrollmentByUserAndCourse,
   SAMPLE_USER_ID,
 } from "@/data/sample-enrollments";
-import { getLessonContent } from "@/data/sample-lesson-content";
 
 export default function CoursePlayerPage() {
   const params = useParams();
@@ -164,8 +163,9 @@ export default function CoursePlayerPage() {
 
         {currentLesson && (
           <LessonContent
-            lesson={currentLesson}
-            content={getLessonContent(currentLesson.id)}
+            courseSlug={slug}
+            lesson={{ ...currentLesson, hasContent: true }}
+            enrollmentId={enrollment?.id || ""}
             isCompleted={completedLessons.has(currentLessonId)}
             onMarkComplete={handleMarkComplete}
             onNext={handleNext}

@@ -34,25 +34,30 @@ export async function GET(request: Request) {
 
     const courses = await Course.find(filter).sort({ _id: -1 }).lean();
 
-    const result = courses.map((c) => ({
-      id: c._id.toString(),
-      slug: c.slug,
-      title: c.title,
-      description: c.description,
-      thumbnail: c.thumbnail || "/images/placeholder-course.webp",
-      price: c.price,
-      currency: c.currency || "INR",
-      category: c.category,
-      difficulty: c.difficulty,
-      duration: c.duration,
-      instructor: c.instructor,
-      lessonsCount:
-        c.modules?.reduce(
-          (acc: number, m: { lessons?: unknown[] }) =>
-            acc + (m.lessons?.length || 0),
-          0
-        ) || 0,
-    }));
+    const result = courses.map((c) => {
+      const thumbnailUrl = c.thumbnailRef
+        ? `/api/images/${c.thumbnailRef.toString()}`
+        : null;
+      return {
+        id: c._id.toString(),
+        slug: c.slug,
+        title: c.title,
+        description: c.description,
+        thumbnail: thumbnailUrl || c.thumbnail || "/images/placeholder-course.webp",
+        price: c.price,
+        currency: c.currency || "INR",
+        category: c.category,
+        difficulty: c.difficulty,
+        duration: c.duration,
+        instructor: c.instructor,
+        lessonsCount:
+          c.modules?.reduce(
+            (acc: number, m: { lessons?: unknown[] }) =>
+              acc + (m.lessons?.length || 0),
+            0
+          ) || 0,
+      };
+    });
 
     return NextResponse.json(result);
   } catch (error) {

@@ -12,7 +12,7 @@ import type { ModuleFormData, LessonFormData } from "@/lib/validators";
 interface LessonState {
   id: string;
   title: string;
-  type: "video" | "document" | "quiz" | "markdown";
+  type: "markdown" | "document" | "quiz" | "image";
   duration: string;
   order: number;
   isFree: boolean;
@@ -35,7 +35,7 @@ interface CourseData {
     lessons: {
       _id: string;
       title: string;
-      type: "video" | "document" | "quiz" | "markdown";
+      type: "markdown" | "document" | "quiz" | "image";
       duration: string;
       order: number;
       isFree: boolean;
@@ -221,6 +221,7 @@ export default function ContentManagementPage({
       </div>
 
       <ModuleEditor
+        courseId={id}
         modules={modules}
         onAddModule={handleAddModule}
         onEditModule={handleEditModule}

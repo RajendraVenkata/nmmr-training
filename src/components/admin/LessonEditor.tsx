@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
-  PlayCircle,
   FileText,
   HelpCircle,
   BookOpen,
+  ImageIcon,
   PlusCircle,
   Pencil,
   Trash2,
+  FileEdit,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,22 +18,23 @@ import { LessonFormDialog } from "./LessonFormDialog";
 import type { LessonFormData } from "@/lib/validators";
 
 const LESSON_ICONS: Record<string, React.ReactNode> = {
-  video: <PlayCircle className="h-3.5 w-3.5" />,
+  markdown: <BookOpen className="h-3.5 w-3.5" />,
   document: <FileText className="h-3.5 w-3.5" />,
   quiz: <HelpCircle className="h-3.5 w-3.5" />,
-  markdown: <BookOpen className="h-3.5 w-3.5" />,
+  image: <ImageIcon className="h-3.5 w-3.5" />,
 };
 
 interface LessonItem {
   id: string;
   title: string;
-  type: "video" | "document" | "quiz" | "markdown";
+  type: "markdown" | "document" | "quiz" | "image";
   duration: string;
   order: number;
   isFree: boolean;
 }
 
 interface LessonEditorProps {
+  courseId: string;
   lessons: LessonItem[];
   onAdd: (data: LessonFormData) => void;
   onEdit: (lessonId: string, data: LessonFormData) => void;
@@ -39,6 +42,7 @@ interface LessonEditorProps {
 }
 
 export function LessonEditor({
+  courseId,
   lessons,
   onAdd,
   onEdit,
@@ -88,6 +92,16 @@ export function LessonEditor({
               {lesson.duration}
             </span>
             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                asChild
+              >
+                <Link href={`/admin/courses/${courseId}/lessons/${lesson.id}/edit`}>
+                  <FileEdit className="h-3 w-3" />
+                </Link>
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
