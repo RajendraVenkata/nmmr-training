@@ -5,13 +5,11 @@ import { MarkdownEditor } from "./MarkdownEditor";
 interface DocumentEditorProps {
   value: string;
   onChange: (value: string) => void;
-  onImageUpload?: () => void;
 }
 
 export function DocumentEditor({
   value,
   onChange,
-  onImageUpload,
 }: DocumentEditorProps) {
   return (
     <div className="space-y-2">
@@ -23,7 +21,6 @@ export function DocumentEditor({
       <MarkdownEditor
         value={value}
         onChange={onChange}
-        onImageUpload={onImageUpload}
         placeholder="Write your document content in markdown..."
         minRows={20}
       />

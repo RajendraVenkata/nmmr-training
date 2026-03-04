@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,12 +15,13 @@ import {
   Code,
   Link as LinkIcon,
   ImageIcon,
+  Loader2,
 } from "lucide-react";
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/lib/constants";
 
 interface MarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
-  onImageUpload?: () => void;
   placeholder?: string;
   minRows?: number;
 }
@@ -28,11 +29,12 @@ interface MarkdownEditorProps {
 export function MarkdownEditor({
   value,
   onChange,
-  onImageUpload,
   placeholder = "Write your content in markdown...",
   minRows = 15,
 }: MarkdownEditorProps) {
   const [tab, setTab] = useState<string>("write");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function insertAtCursor(before: string, after = "") {
     const textarea = document.getElementById(
@@ -58,6 +60,54 @@ export function MarkdownEditor({
         start + before.length + selected.length
       );
     }, 0);
+  }
+
+  async function handleImageUpload(file: File) {
+    if (!(ALLOWED_IMAGE_TYPES as readonly string[]).includes(file.type)) {
+      alert("Only JPEG, PNG, WebP, and GIF images are allowed.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      alert("Image must be under 2MB.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch("/api/admin/images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          base64,
+          mimeType: file.type,
+          purpose: "inline",
+          filename: file.name,
+          altText: file.name.replace(/\.[^.]+$/, ""),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const data = await res.json();
+      const imageUrl = `/api/images/${data.image.id}`;
+      const altText = file.name.replace(/\.[^.]+$/, "");
+      insertAtCursor(`\n![${altText}](${imageUrl})\n`, "");
+    } catch {
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   }
 
   const wordCount = value.trim() ? value.trim().split(/\s+/).length : 0;
@@ -133,18 +183,31 @@ export function MarkdownEditor({
               >
                 <LinkIcon className="h-4 w-4" />
               </Button>
-              {onImageUpload && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={onImageUpload}
-                  title="Insert image"
-                >
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                title="Upload & insert image"
+              >
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
                   <ImageIcon className="h-4 w-4" />
-                </Button>
-              )}
+                )}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageUpload(file);
+                }}
+              />
             </div>
           )}
         </div>
