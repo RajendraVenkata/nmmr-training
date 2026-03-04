@@ -9,6 +9,7 @@ import {
   Receipt,
   Users,
   PlusCircle,
+  Terminal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DASHBOARD_NAV, ADMIN_NAV } from "@/lib/constants";
@@ -21,6 +22,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   "/dashboard/purchases": <Receipt className="h-4 w-4" />,
   "/admin": <LayoutDashboard className="h-4 w-4" />,
   "/admin/courses": <BookOpen className="h-4 w-4" />,
+  "/admin/labs": <Terminal className="h-4 w-4" />,
   "/admin/users": <Users className="h-4 w-4" />,
 };
 

@@ -391,8 +391,12 @@
 | Phase 8 | Sample Data & Testing | Phase 1-7 | QA |
 | **Phase 9** | **Payment Integration** | **Phase 2, 3, 4** | **Optional** |
 | **Phase 10** | **MongoDB Content-First (No Videos)** | **Phase 1-5** | **Core** |
+| **Phase 11** | **Remote Command Execution (Azure VM)** | **Phase 10** | **Feature** |
+| **Phase 12** | **Migrate Docker Host to On-Premise** | **Phase 11** | **Migration** |
 
 > **Note:** Phase 9 (Payment Integration) is fully optional. Without it, all courses can be offered as free, or enrollment can be managed manually by admins. Payment can be added at any time after Phase 4 is complete.
+>
+> **Note:** Phase 11 sets up interactive terminal labs using an Azure VM for Docker containers. Phase 12 migrates the Docker host from Azure VM to an on-premise server to save costs. See `remote-cmd.md` for detailed architecture design.
 
 ---
 
@@ -901,3 +905,620 @@
 > **Dependency:** Phase 10 requires Phases 1-5 to be complete. It can be done in parallel with Phases 6-9.
 > **New collections:** `lessoncontent`, `courseimages` in the `nmmr-training` database.
 > **No video support:** This phase intentionally removes video. Video streaming can be added as a future phase if needed.
+
+---
+
+## Phase 11: Remote Command Execution — Azure VM with Docker
+
+> **Goal:** Allow learners to run Linux commands and test programs in isolated Docker containers directly from lesson pages. In this phase, Docker containers run on an **Azure VM** (all infrastructure stays in Azure). Phase 12 migrates the Docker host to an on-premise server.
+>
+> **Architecture reference:** See `remote-cmd.md` for detailed diagrams and design.
+
+---
+
+### 11.1 Azure VM Setup & Docker Installation
+
+#### Azure VM Provisioning
+- [ ] Create an Azure Virtual Machine (Ubuntu 22.04 LTS):
+  - Size: `Standard_B2s` (2 vCPU, 4 GB RAM) — sufficient for ~8 concurrent containers
+  - Disk: 30 GB SSD (Standard_LRS)
+  - Region: Same as other Azure resources (minimize latency)
+  - Networking: Create Virtual Network and Network Security Group (NSG)
+- [ ] Configure NSG inbound rules:
+  - SSH (port 22) — restricted to your IP only (for management)
+  - HTTPS (port 443) — for WebSocket relay service (behind reverse proxy)
+  - Deny all other inbound traffic
+- [ ] Set up SSH key-based authentication (disable password login)
+- [ ] Create a DNS record: `terminal.nmmr.tech` → Azure VM public IP (A record)
+
+#### Docker Installation on Azure VM
+- [ ] SSH into Azure VM
+- [ ] Install Docker Engine (latest stable):
+  - `apt update && apt install -y docker.io`
+  - `systemctl enable docker && systemctl start docker`
+- [ ] Install Docker Compose v2:
+  - `apt install -y docker-compose-plugin`
+- [ ] Create a non-root user for the relay service:
+  - `useradd -m -s /bin/bash nmmr-relay`
+  - `usermod -aG docker nmmr-relay`
+- [ ] Install Node.js 20 LTS:
+  - `curl -fsSL https://deb.nodesource.com/setup_20.x | bash -`
+  - `apt install -y nodejs`
+- [ ] Install PM2 for process management:
+  - `npm install -g pm2`
+- [ ] Install Nginx as reverse proxy (for SSL termination):
+  - `apt install -y nginx`
+- [ ] Install Certbot for Let's Encrypt SSL:
+  - `apt install -y certbot python3-certbot-nginx`
+  - `certbot --nginx -d terminal.nmmr.tech`
+
+#### Build Docker Lab Images
+- [ ] Create `nmmr/python-lab` Docker image:
+  - Base: `python:3.12-slim`
+  - Add: pip, common packages (numpy, pandas, requests, flask)
+  - User: non-root `learner` user
+  - Workdir: `/home/learner`
+  - Entrypoint: `/bin/bash`
+- [ ] Create `nmmr/node-lab` Docker image:
+  - Base: `node:20-slim`
+  - Add: npm, yarn, common packages
+  - User: non-root `learner` user
+- [ ] Create `nmmr/linux-lab` Docker image:
+  - Base: `ubuntu:22.04`
+  - Add: gcc, make, vim, git, curl, wget, common CLI tools
+  - User: non-root `learner` user
+- [ ] Build and test all images on the Azure VM:
+  - `docker build -t nmmr/python-lab:latest ./docker/python-lab/`
+  - `docker build -t nmmr/node-lab:latest ./docker/node-lab/`
+  - `docker build -t nmmr/linux-lab:latest ./docker/linux-lab/`
+- [ ] Test each image manually: `docker run --rm -it nmmr/python-lab bash`
+
+---
+
+### 11.2 Terminal Relay Service (nmmr-terminal)
+
+#### Create `nmmr-terminal` Repository
+- [ ] Initialize new repository: `nmmr-terminal`
+- [ ] Set up Node.js project with TypeScript:
+  - `npm init -y`
+  - Install: `typescript ws dockerode jsonwebtoken dotenv`
+  - Install dev: `@types/ws @types/jsonwebtoken @types/node ts-node`
+- [ ] Create `tsconfig.json` with strict mode
+
+#### Core Service Files
+- [ ] Create `src/config.ts` — configuration:
+  - `PORT` (default 8080)
+  - `JWT_SECRET` (must match nmmr-training's AUTH_SECRET)
+  - `MAX_CONTAINERS_PER_USER` (default 1)
+  - `MAX_CONTAINERS_TOTAL` (default 20)
+  - `CONTAINER_IDLE_TIMEOUT_MS` (default 30 minutes)
+  - `CONTAINER_CPU_LIMIT` (default 0.5 cores)
+  - `CONTAINER_MEMORY_LIMIT` (default 256m)
+  - `NMMR_API_URL` (Azure Functions URL for fetching lab configs)
+  - `NMMR_API_KEY` (optional API key for nmmr-api access)
+
+- [ ] Create `src/auth.ts` — JWT authentication:
+  - `validateToken(token: string): Promise<UserPayload>` — verify JWT, extract userId, role
+  - `validateEnrollment(userId: string, courseId: string): Promise<boolean>` — check enrollment via nmmr-api
+  - Reject expired tokens
+  - Reject non-enrolled users (unless lesson is free)
+
+- [ ] Create `src/container-manager.ts` — Docker container lifecycle:
+  - `createContainer(userId, labId, labConfig): Promise<ContainerInfo>` — create isolated container
+    - Set resource limits (CPU, memory, disk)
+    - Set security options (no-new-privileges, seccomp, drop capabilities)
+    - Disable network by default
+    - Mount tmpfs for writable areas
+    - Inject preloaded files from lab config
+  - `attachToContainer(containerId): Promise<ExecStream>` — attach stdin/stdout/stderr
+  - `getContainer(userId, labId): ContainerInfo | null` — find existing container
+  - `destroyContainer(containerId): Promise<void>` — stop and remove container
+  - `destroyAllUserContainers(userId): Promise<void>` — cleanup for a user
+  - `getActiveContainerCount(): number` — for capacity checks
+
+- [ ] Create `src/session-store.ts` — active session tracking:
+  - In-memory Map: `userId:labId → { containerId, wsConnection, lastActivity, createdAt }`
+  - `createSession(userId, labId, containerId)` — register new session
+  - `getSession(userId, labId)` — lookup active session
+  - `updateActivity(userId, labId)` — reset idle timer
+  - `removeSession(userId, labId)` — cleanup on disconnect
+  - `getAllSessions()` — for monitoring
+
+- [ ] Create `src/lab-cache.ts` — lab configuration cache:
+  - Fetch lab definitions from `GET {NMMR_API_URL}/api/labs/{labId}`
+  - Cache in memory with 5-minute TTL
+  - Fallback to defaults if API unreachable
+  - `getLabConfig(labId): Promise<LabConfig>`
+
+- [ ] Create `src/server.ts` — main WebSocket server:
+  - Start `ws` WebSocket server on configured port
+  - On connection:
+    1. Extract JWT from query params or headers
+    2. Validate token via `auth.validateToken()`
+    3. Parse `labId` and `courseId` from connection URL or message
+    4. Validate enrollment via `auth.validateEnrollment()`
+    5. Fetch lab config via `lab-cache.getLabConfig()`
+    6. Check capacity (`getActiveContainerCount < MAX_CONTAINERS_TOTAL`)
+    7. Reuse existing container or create new one via `container-manager`
+    8. Attach to container's exec stream
+    9. Pipe: WebSocket messages → container stdin, container stdout → WebSocket messages
+  - On message: pipe user input to container stdin, update last activity
+  - On close: detach from container, start idle timer
+  - On idle timeout: destroy container, remove session
+  - Error handling: send error messages to client, cleanup on crash
+
+- [ ] Create `src/cleanup.ts` — periodic cleanup:
+  - Run every 5 minutes
+  - Find sessions exceeding `CONTAINER_IDLE_TIMEOUT_MS`
+  - Destroy idle containers
+  - Log cleanup actions
+  - Remove orphaned containers (not tracked in session store)
+
+#### Deployment on Azure VM
+- [ ] Create `docker-compose.yml` for the relay service itself (optional, can run directly):
+  ```yaml
+  version: "3.8"
+  services:
+    relay:
+      build: .
+      ports:
+        - "8080:8080"
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+      environment:
+        - JWT_SECRET=${JWT_SECRET}
+        - NMMR_API_URL=${NMMR_API_URL}
+      restart: unless-stopped
+  ```
+- [ ] Configure Nginx reverse proxy with SSL:
+  - Proxy `wss://terminal.nmmr.tech` → `ws://localhost:8080`
+  - WebSocket upgrade headers
+  - Proxy timeouts (increase for long-lived connections)
+- [ ] Set up PM2 ecosystem config for auto-restart:
+  - `pm2 start dist/server.js --name nmmr-terminal`
+  - `pm2 startup` — auto-start on VM reboot
+  - `pm2 save`
+- [ ] Create `.env` file on VM with production secrets:
+  - `JWT_SECRET=<same as nmmr-training AUTH_SECRET>`
+  - `NMMR_API_URL=https://<nmmr-api>.azurewebsites.net/api`
+- [ ] Test WebSocket connection: `wscat -c wss://terminal.nmmr.tech?token=<jwt>`
+
+---
+
+### 11.3 Lab Management API (nmmr-api additions)
+
+#### `src/functions/labs.ts` — **NEW** Lab CRUD Endpoints (Azure Functions)
+- [ ] `GET /api/labs` — list all lab definitions:
+  - Returns: `[{ labId, name, dockerImage, description, resources }]`
+  - Admin only for full list; relay service uses API key auth
+- [ ] `GET /api/labs/:labId` — get specific lab config:
+  - Returns full lab definition including preloadFiles and resource limits
+  - Called by on-premise/VM relay service when a learner connects
+  - Supports API key auth (for relay service) or JWT (for admin)
+- [ ] `POST /api/labs` — create new lab definition:
+  - Admin only
+  - Validate: labId unique, dockerImage non-empty, valid resource limits
+- [ ] `PUT /api/labs/:labId` — update lab definition:
+  - Admin only
+- [ ] `DELETE /api/labs/:labId` — delete lab definition:
+  - Admin only
+  - Check if any lessons reference this labId before deleting
+
+#### `src/lib/models/Lab.ts` — **NEW** Lab Mongoose Model (in nmmr-training)
+- [ ] Create Lab model for MongoDB:
+  - `labId: string` (unique, e.g., "python-basics")
+  - `name: string` (display name)
+  - `dockerImage: string` (e.g., "nmmr/python-lab:latest")
+  - `description: string`
+  - `resources: { cpuLimit, memoryLimit, diskLimit, timeoutMinutes }`
+  - `preloadFiles: [{ path, content }]` (files to create in container)
+  - `startupCommand: string | null`
+  - `networkEnabled: boolean` (default false)
+  - `isActive: boolean` (default true)
+  - `createdAt, updatedAt` (timestamps)
+- [ ] Seed initial lab definitions:
+  - `python-basics` → `nmmr/python-lab:latest`
+  - `node-basics` → `nmmr/node-lab:latest`
+  - `linux-basics` → `nmmr/linux-lab:latest`
+
+---
+
+### 11.4 Frontend — Terminal Components (nmmr-training)
+
+#### Terminal Widget Components
+- [ ] Install xterm.js dependencies:
+  - `npm install xterm @xterm/addon-fit @xterm/addon-web-links`
+  - `npm install -D @types/xterm` (if needed)
+
+- [ ] Create `src/components/terminal/TerminalWidget.tsx`:
+  - Initialize xterm.js terminal instance
+  - Connect to WebSocket: `wss://terminal.nmmr.tech?token={jwt}&labId={labId}&courseId={courseId}`
+  - Handle WebSocket events:
+    - `onopen`: show "Connected" status, focus terminal
+    - `onmessage`: write data to xterm
+    - `onclose`: show "Disconnected" status, offer reconnect button
+    - `onerror`: show error message
+  - Pipe xterm key events → WebSocket send
+  - Auto-resize terminal on window resize (xterm-addon-fit)
+  - Clickable URLs in terminal output (xterm-addon-web-links)
+  - Theme: match dark/light mode of website
+  - Props: `labId: string`, `courseId: string`
+
+- [ ] Create `src/components/terminal/TerminalBlock.tsx`:
+  - Wrapper component rendered from markdown `:::terminal labId:::` blocks
+  - Shows lab name, description, connection status
+  - "Connect" button to establish WebSocket (lazy — don't connect until user clicks)
+  - "Disconnect" button to close connection
+  - Fullscreen toggle button
+  - Renders `TerminalWidget` inside a styled container
+
+- [ ] Create `src/components/terminal/TerminalConnectionStatus.tsx`:
+  - Visual indicator: green dot (connected), yellow dot (connecting), red dot (disconnected)
+  - Connection time elapsed
+  - "Reconnect" button when disconnected
+
+#### Markdown Integration
+- [ ] Update `src/components/dashboard/LessonContent.tsx`:
+  - Add custom ReactMarkdown renderer for `:::terminal <labId>:::` blocks
+  - When markdown parser encounters `:::terminal`, render `<TerminalBlock labId={labId} />`
+  - Handle multiple terminal blocks in a single lesson
+
+- [ ] Update `src/components/admin/MarkdownEditor.tsx`:
+  - Add "Insert Terminal" toolbar button
+  - Opens a dialog to select a lab from available labs (fetched from `/api/labs`)
+  - Inserts `:::terminal <labId>:::` at cursor position
+  - Preview shows a placeholder terminal block (not connected)
+
+#### Environment Variables
+- [ ] Add to `.env.local` and Azure Static Web Apps config:
+  - `NEXT_PUBLIC_TERMINAL_WS_URL=wss://terminal.nmmr.tech`
+  - `NEXT_PUBLIC_TERMINAL_ENABLED=true` (feature flag)
+
+---
+
+### 11.5 Admin UI — Lab Management
+
+#### Lab Management Pages
+- [ ] Create `src/app/admin/labs/page.tsx` — Lab listing page:
+  - Table: Lab ID, Name, Docker Image, CPU/Memory limits, Active status, Actions
+  - "Create New Lab" button
+  - Edit / Delete actions per row
+  - Show number of lessons using each lab
+
+- [ ] Create `src/app/admin/labs/new/page.tsx` — Create lab page:
+  - Form fields: Lab ID (slug), Name, Docker Image, Description
+  - Resource limits: CPU (slider 0.25-2.0), Memory (dropdown 128m-1g), Disk (dropdown 50m-500m), Timeout (slider 10-60 min)
+  - Preloaded files editor: add/remove file entries (path + content textarea)
+  - Startup command (optional)
+  - Network enabled toggle
+  - Save → POST /api/labs
+
+- [ ] Create `src/app/admin/labs/[labId]/edit/page.tsx` — Edit lab page:
+  - Same form as create, pre-populated with existing values
+  - Save → PUT /api/labs/:labId
+
+- [ ] Add "Labs" link to admin sidebar navigation
+
+---
+
+### 11.6 Security & Monitoring
+
+#### Security Hardening on Azure VM
+- [ ] Configure Docker daemon security:
+  - Enable user namespaces: `userns-remap` in `/etc/docker/daemon.json`
+  - Set default seccomp profile
+  - Set storage driver limits
+  - Disable raw socket access in containers
+- [ ] Configure Nginx rate limiting:
+  - `limit_conn_zone` — max 5 WebSocket connections per IP
+  - `limit_req_zone` — max 10 connection attempts per minute per IP
+- [ ] Set up fail2ban for SSH brute-force protection
+- [ ] Enable Azure VM auto-shutdown schedule (if used for dev/testing only)
+- [ ] Configure firewall (ufw):
+  - Allow SSH (22) from specific IPs
+  - Allow HTTPS (443) from anywhere
+  - Deny everything else
+
+#### Monitoring & Logging
+- [ ] Set up PM2 monitoring: `pm2 monit`
+- [ ] Configure PM2 log rotation: `pm2 install pm2-logrotate`
+- [ ] Create health check endpoint in relay service:
+  - `GET /health` — returns `{ status, activeContainers, uptime, memoryUsage }`
+- [ ] Set up Azure VM metrics alerts:
+  - CPU usage > 80% sustained for 10 minutes
+  - Memory usage > 85%
+  - Disk usage > 80%
+- [ ] Add relay service metrics logging:
+  - Container creation/destruction events
+  - Active session count (periodic log every minute)
+  - WebSocket connection/disconnection events
+  - Error rates
+
+---
+
+### 11.7 Testing & Verification
+
+#### Manual Testing Checklist
+- [ ] Docker images: verify all 3 images build and run correctly on Azure VM
+- [ ] Relay service: verify it starts and accepts WebSocket connections
+- [ ] JWT auth: verify valid tokens are accepted, invalid/expired tokens are rejected
+- [ ] Container lifecycle: verify containers are created, attached, and destroyed correctly
+- [ ] Idle timeout: verify containers are destroyed after idle period
+- [ ] Resource limits: verify CPU and memory limits are enforced (run a stress test inside container)
+- [ ] Network isolation: verify containers cannot reach the internet (when networkEnabled=false)
+- [ ] Admin: create a lab definition, verify it appears in lab list
+- [ ] Admin: insert terminal block into a lesson markdown, verify it saves
+- [ ] Learner: open a lesson with terminal block, verify terminal connects
+- [ ] Learner: type commands in terminal, verify output appears in real time
+- [ ] Learner: disconnect and reconnect, verify container is reused (within timeout)
+- [ ] Learner: verify terminal is not available for non-enrolled users
+- [ ] Multiple users: verify 2+ concurrent terminal sessions work independently
+- [ ] SSL: verify `wss://terminal.nmmr.tech` works with valid certificate
+- [ ] Mobile: verify terminal renders and is usable on mobile (keyboard input)
+
+---
+
+### Phase 11 — File Summary
+
+| # | Repo | File | Action | Description |
+|---|------|------|--------|-------------|
+| 1 | nmmr-terminal | `src/server.ts` | **New** | WebSocket server — main entry point |
+| 2 | nmmr-terminal | `src/auth.ts` | **New** | JWT validation, enrollment checking |
+| 3 | nmmr-terminal | `src/container-manager.ts` | **New** | Docker container lifecycle (dockerode) |
+| 4 | nmmr-terminal | `src/session-store.ts` | **New** | In-memory active session tracking |
+| 5 | nmmr-terminal | `src/lab-cache.ts` | **New** | Cache lab configs from Azure API |
+| 6 | nmmr-terminal | `src/config.ts` | **New** | Configuration and environment variables |
+| 7 | nmmr-terminal | `src/cleanup.ts` | **New** | Periodic idle container cleanup |
+| 8 | nmmr-terminal | `docker/python-lab/Dockerfile` | **New** | Python 3.12 lab image |
+| 9 | nmmr-terminal | `docker/node-lab/Dockerfile` | **New** | Node.js 20 lab image |
+| 10 | nmmr-terminal | `docker/linux-lab/Dockerfile` | **New** | Ubuntu CLI lab image |
+| 11 | nmmr-terminal | `docker-compose.yml` | **New** | Relay service container config |
+| 12 | nmmr-terminal | `nginx/terminal.conf` | **New** | Nginx reverse proxy + SSL config |
+| 13 | nmmr-api | `src/functions/labs.ts` | **New** | Lab CRUD Azure Function endpoints |
+| 14 | nmmr-training | `src/lib/models/Lab.ts` | **New** | Lab Mongoose model |
+| 15 | nmmr-training | `src/components/terminal/TerminalWidget.tsx` | **New** | xterm.js terminal with WebSocket |
+| 16 | nmmr-training | `src/components/terminal/TerminalBlock.tsx` | **New** | Markdown-embedded terminal wrapper |
+| 17 | nmmr-training | `src/components/terminal/TerminalConnectionStatus.tsx` | **New** | Connection status indicator |
+| 18 | nmmr-training | `src/components/dashboard/LessonContent.tsx` | Modify | Add :::terminal::: markdown renderer |
+| 19 | nmmr-training | `src/components/admin/MarkdownEditor.tsx` | Modify | Add "Insert Terminal" toolbar button |
+| 20 | nmmr-training | `src/app/admin/labs/page.tsx` | **New** | Admin lab listing page |
+| 21 | nmmr-training | `src/app/admin/labs/new/page.tsx` | **New** | Admin create lab page |
+| 22 | nmmr-training | `src/app/admin/labs/[labId]/edit/page.tsx` | **New** | Admin edit lab page |
+
+> **Dependency:** Phase 11 requires Phase 10 to be complete (lesson content system must be in place).
+> **Infrastructure:** Azure VM (`Standard_B2s`), Docker Engine, Nginx, Let's Encrypt SSL.
+> **New repo:** `nmmr-terminal` — deployed on Azure VM.
+> **Cost:** Azure VM `Standard_B2s` ~$30-40/month (can be deallocated when not in use).
+
+---
+
+## Phase 12: Migrate Docker Host from Azure VM to On-Premise Server
+
+> **Goal:** Move the Docker container execution from the Azure VM to your own on-premise server to eliminate VM costs (~$30-40/month). Everything else (frontend, API, database) stays on Azure. The on-premise server connects outbound via Cloudflare Tunnel — no inbound ports needed.
+>
+> **Architecture reference:** See `remote-cmd.md` — "What Lives Where" section.
+
+---
+
+### 12.1 On-Premise Server Setup
+
+#### Hardware & OS Preparation
+- [ ] Identify on-premise server hardware:
+  - Minimum: 4 cores, 8 GB RAM, 50 GB SSD, stable internet
+  - Recommended: 8 cores, 16 GB RAM for ~16 concurrent learners
+- [ ] Install Ubuntu 22.04 LTS (or Debian 12) server edition
+- [ ] Configure static LAN IP or DHCP reservation
+- [ ] Ensure internet connectivity is stable (for Cloudflare Tunnel outbound)
+- [ ] Set hostname: `nmmr-docker-host`
+
+#### Docker Installation (On-Premise)
+- [ ] Install Docker Engine:
+  - `apt update && apt install -y docker.io`
+  - `systemctl enable docker && systemctl start docker`
+- [ ] Install Docker Compose v2:
+  - `apt install -y docker-compose-plugin`
+- [ ] Create relay service user:
+  - `useradd -m -s /bin/bash nmmr-relay && usermod -aG docker nmmr-relay`
+- [ ] Install Node.js 20 LTS
+- [ ] Install PM2: `npm install -g pm2`
+
+#### Transfer Docker Lab Images
+- [ ] Export images from Azure VM:
+  - `docker save nmmr/python-lab:latest | gzip > python-lab.tar.gz`
+  - `docker save nmmr/node-lab:latest | gzip > node-lab.tar.gz`
+  - `docker save nmmr/linux-lab:latest | gzip > linux-lab.tar.gz`
+- [ ] Transfer images to on-premise server (via SCP or USB):
+  - `scp *.tar.gz nmmr-relay@on-premise-server:/home/nmmr-relay/images/`
+- [ ] Load images on on-premise server:
+  - `docker load < python-lab.tar.gz`
+  - `docker load < node-lab.tar.gz`
+  - `docker load < linux-lab.tar.gz`
+- [ ] Verify images: `docker images | grep nmmr`
+- [ ] Alternative: rebuild images from Dockerfiles on on-premise server (if source is available)
+
+---
+
+### 12.2 Cloudflare Tunnel Setup
+
+#### Cloudflare Account & Tunnel Configuration
+- [ ] Create Cloudflare account (free tier) if not already done
+- [ ] Add your domain to Cloudflare (or use existing Cloudflare DNS setup)
+- [ ] Install `cloudflared` on on-premise server:
+  - `curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | gpg --dearmor -o /usr/share/keyrings/cloudflare-main.gpg`
+  - `echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | tee /etc/apt/sources.list.d/cloudflared.list`
+  - `apt update && apt install -y cloudflared`
+- [ ] Authenticate cloudflared:
+  - `cloudflared tunnel login` (opens browser to authorize with Cloudflare account)
+- [ ] Create a named tunnel:
+  - `cloudflared tunnel create nmmr-terminal`
+  - Note the tunnel ID and credentials file path
+- [ ] Create tunnel config `/etc/cloudflared/config.yml`:
+  ```yaml
+  tunnel: <TUNNEL_ID>
+  credentials-file: /root/.cloudflared/<TUNNEL_ID>.json
+
+  ingress:
+    - hostname: terminal.nmmr.tech
+      service: ws://localhost:8080
+      originRequest:
+        connectTimeout: 10s
+        noTLSVerify: false
+    - service: http_status:404
+  ```
+- [ ] Create DNS CNAME record:
+  - `cloudflared tunnel route dns nmmr-terminal terminal.nmmr.tech`
+  - This creates: `terminal.nmmr.tech → <TUNNEL_ID>.cfargotunnel.com`
+- [ ] Test tunnel: `cloudflared tunnel run nmmr-terminal`
+- [ ] Install cloudflared as a system service:
+  - `cloudflared service install`
+  - `systemctl enable cloudflared`
+  - `systemctl start cloudflared`
+
+#### Remove Azure VM DNS Record
+- [ ] Update DNS: `terminal.nmmr.tech` now points to Cloudflare Tunnel (CNAME), not Azure VM IP (A record)
+- [ ] Verify: `dig terminal.nmmr.tech` shows CNAME to cfargotunnel.com
+
+---
+
+### 12.3 Deploy Terminal Relay Service on On-Premise
+
+#### Clone and Configure
+- [ ] Clone `nmmr-terminal` repo on on-premise server:
+  - `git clone https://github.com/<org>/nmmr-terminal.git /opt/nmmr-terminal`
+- [ ] Install dependencies:
+  - `cd /opt/nmmr-terminal && npm install`
+- [ ] Build TypeScript:
+  - `npm run build`
+- [ ] Create `.env` on on-premise server:
+  - `JWT_SECRET=<same as nmmr-training AUTH_SECRET>`
+  - `NMMR_API_URL=https://<nmmr-api>.azurewebsites.net/api`
+  - `PORT=8080`
+  - Same values as were used on Azure VM
+
+#### Process Management
+- [ ] Start relay service with PM2:
+  - `pm2 start dist/server.js --name nmmr-terminal`
+  - `pm2 startup` — auto-start on server reboot
+  - `pm2 save`
+- [ ] Verify relay service is running: `pm2 status`
+- [ ] Verify WebSocket accepts connections via tunnel:
+  - `wscat -c wss://terminal.nmmr.tech?token=<valid-jwt>`
+
+#### Nginx (Optional — Not needed with Cloudflare Tunnel)
+- [ ] With Cloudflare Tunnel, Nginx is NOT required on on-premise (Cloudflare handles SSL)
+- [ ] The relay service runs plain `ws://` on port 8080, Cloudflare terminates SSL
+- [ ] If you want local Nginx for additional request filtering, install and configure:
+  - Proxy `ws://localhost:8080`
+  - No SSL needed (Cloudflare handles it)
+
+---
+
+### 12.4 Frontend Updates (nmmr-training)
+
+#### Update WebSocket URL (if changed)
+- [ ] Verify `NEXT_PUBLIC_TERMINAL_WS_URL` still points to `wss://terminal.nmmr.tech`
+  - This should NOT change — the domain stays the same, only the backend moves
+- [ ] No frontend code changes required if the URL stays the same
+- [ ] Deploy to Azure Static Web Apps (if env var changed):
+  - Update environment variable in Azure portal
+  - Trigger redeployment
+
+---
+
+### 12.5 Decommission Azure VM
+
+#### Verify On-Premise is Fully Operational
+- [ ] Run full end-to-end test:
+  - Learner opens lesson with terminal → connects via tunnel → runs commands → sees output
+  - Admin creates lab → learner can use it
+  - Multiple concurrent users work independently
+  - Idle timeout and cleanup work correctly
+- [ ] Monitor for 24-48 hours — check for disconnects, latency issues, tunnel stability
+- [ ] Verify Cloudflare Tunnel auto-reconnects after network interruptions
+
+#### Shut Down Azure VM
+- [ ] Stop the relay service on Azure VM:
+  - SSH into VM: `pm2 stop nmmr-terminal && pm2 delete nmmr-terminal`
+- [ ] Stop Docker containers on Azure VM:
+  - `docker stop $(docker ps -q) && docker system prune -af`
+- [ ] Deallocate the Azure VM (stop billing):
+  - Azure Portal → VM → Stop (Deallocated)
+  - Or: `az vm deallocate --resource-group <rg> --name <vm-name>`
+- [ ] After 2 weeks of successful on-premise operation, delete the Azure VM:
+  - Delete VM, disk, NIC, public IP, NSG (if no longer needed)
+  - `az vm delete --resource-group <rg> --name <vm-name> --yes`
+  - `az network nsg delete --resource-group <rg> --name <nsg-name>`
+- [ ] Delete old DNS A record for `terminal.nmmr.tech` (Azure VM IP) — now using Cloudflare CNAME
+
+---
+
+### 12.6 On-Premise Maintenance & Operations
+
+#### Automated Maintenance
+- [ ] Set up Docker image cleanup cron job:
+  - `0 3 * * 0 docker system prune -f` (weekly Sunday 3 AM)
+- [ ] Set up log rotation for relay service logs:
+  - PM2 log rotation: `pm2 install pm2-logrotate`
+  - Set max size: `pm2 set pm2-logrotate:max_size 50M`
+  - Set retention: `pm2 set pm2-logrotate:retain 7`
+- [ ] Set up automatic OS security updates:
+  - `apt install -y unattended-upgrades`
+  - `dpkg-reconfigure unattended-upgrades`
+- [ ] Set up Cloudflare Tunnel health monitoring:
+  - Check systemd service: `systemctl status cloudflared`
+  - Set up email/Slack alert if tunnel goes down (use a simple cron script)
+
+#### Updating Lab Images
+- [ ] Document the process for updating Docker lab images:
+  1. Update Dockerfile in `nmmr-terminal/docker/<lab>/`
+  2. Build new image: `docker build -t nmmr/<lab>:latest ./docker/<lab>/`
+  3. Existing containers use old image until they're destroyed
+  4. New containers automatically use the new image
+  5. Force refresh: restart relay service (`pm2 restart nmmr-terminal`)
+
+#### Backup & Recovery
+- [ ] Document recovery procedure if on-premise server fails:
+  1. Re-provision Azure VM (Phase 11 steps)
+  2. Update DNS: point `terminal.nmmr.tech` back to Azure VM IP
+  3. Deploy relay service and images on Azure VM
+  4. Labs operational within ~30 minutes
+- [ ] Keep Azure VM deployment scripts/notes for quick re-provisioning
+- [ ] Store Docker lab image tarballs in Azure Blob Storage as backup
+
+---
+
+### 12.7 Testing & Verification
+
+#### Migration Verification Checklist
+- [ ] Cloudflare Tunnel: verify `cloudflared tunnel info nmmr-terminal` shows active connection
+- [ ] DNS: verify `terminal.nmmr.tech` resolves to Cloudflare (not Azure VM IP)
+- [ ] SSL: verify `wss://terminal.nmmr.tech` has valid certificate (Cloudflare manages this)
+- [ ] WebSocket: verify connection through tunnel works (wscat test)
+- [ ] Latency: compare latency (Azure VM vs on-premise) — should be acceptable (<200ms roundtrip)
+- [ ] Container lifecycle: create, use, idle-timeout, destroy — all work on on-premise
+- [ ] Concurrent users: test 3+ simultaneous terminal sessions
+- [ ] Tunnel resilience: disconnect internet briefly, verify tunnel auto-reconnects
+- [ ] Server reboot: reboot on-premise server, verify cloudflared + PM2 auto-start relay service
+- [ ] Azure VM deallocated: verify everything still works without the Azure VM
+- [ ] Cost verification: Azure bill shows no VM charges after deallocation
+
+---
+
+### Phase 12 — File Summary
+
+| # | Location | File/Action | Description |
+|---|----------|-------------|-------------|
+| 1 | On-premise | Docker Engine install | Docker + Compose on physical server |
+| 2 | On-premise | Lab image transfer | Move python-lab, node-lab, linux-lab images |
+| 3 | On-premise | `cloudflared` install & config | Cloudflare Tunnel daemon + config.yml |
+| 4 | On-premise | `nmmr-terminal` deploy | Clone repo, npm install, PM2 start |
+| 5 | Cloudflare | DNS CNAME | `terminal.nmmr.tech → tunnel CNAME` |
+| 6 | Azure | VM decommission | Stop, deallocate, eventually delete VM |
+| 7 | Azure SWA | Env var check | Verify TERMINAL_WS_URL unchanged |
+| 8 | On-premise | Cron jobs | Docker cleanup, log rotation, OS updates |
+| 9 | Azure Blob | Image backups | Store Docker image tarballs as disaster recovery |
+
+> **Dependency:** Phase 12 requires Phase 11 to be fully complete and tested.
+> **No code changes:** This phase is purely infrastructure migration. No application code changes needed (same WebSocket URL, same API).
+> **Cost savings:** Eliminates ~$30-40/month Azure VM cost. Replaced by $0 on-premise + $0 Cloudflare Tunnel.
+> **Rollback:** If on-premise fails, re-provision Azure VM and restore DNS A record within 30 minutes.

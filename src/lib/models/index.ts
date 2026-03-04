@@ -22,3 +22,6 @@ export type {
   IQuestion,
   IOption,
 } from "./QuizSchema";
+
+export { Lab } from "./Lab";
+export type { ILab, ILabResources, IPreloadFile } from "./Lab";

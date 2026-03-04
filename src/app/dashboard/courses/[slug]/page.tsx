@@ -21,6 +21,7 @@ export default function CoursePlayerPage() {
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [enrollment, setEnrollment] = useState<EnrollmentWithCourse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [terminalToken, setTerminalToken] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -39,6 +40,17 @@ export default function CoursePlayerPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [slug]);
+
+  // Fetch a short-lived terminal token for WebSocket auth
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_TERMINAL_ENABLED !== "true") return;
+    fetch("/api/terminal/token", { method: "POST" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.token) setTerminalToken(data.token);
+      })
+      .catch(() => {});
+  }, []);
 
   const allLessons = useMemo(() => {
     if (!course) return [];
@@ -205,8 +217,10 @@ export default function CoursePlayerPage() {
         {currentLesson && (
           <LessonContent
             courseSlug={slug}
+            courseId={course.id}
             lesson={currentLesson}
             enrollmentId={enrollment.id}
+            token={terminalToken}
             isCompleted={completedLessons.has(currentLessonId)}
             onMarkComplete={handleMarkComplete}
             onNext={handleNext}

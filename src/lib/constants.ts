@@ -54,6 +54,7 @@ export const DASHBOARD_NAV: NavItem[] = [
 export const ADMIN_NAV: NavItem[] = [
   { label: "Dashboard", href: "/admin" },
   { label: "Courses", href: "/admin/courses" },
+  { label: "Labs", href: "/admin/labs" },
   { label: "Users", href: "/admin/users" },
 ];
 

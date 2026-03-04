@@ -18,10 +18,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { QuizPlayer } from "./QuizPlayer";
 import { ImageLesson } from "./ImageLesson";
+import { TerminalBlock } from "@/components/terminal/TerminalBlock";
 import type { LessonType, QuizData } from "@/types";
 
 interface LessonContentProps {
   courseSlug: string;
+  courseId: string;
   lesson: {
     id: string;
     title: string;
@@ -30,6 +32,7 @@ interface LessonContentProps {
     hasContent?: boolean;
   };
   enrollmentId: string;
+  token: string;
   isCompleted: boolean;
   onMarkComplete: () => void;
   onNext: (() => void) | null;
@@ -67,7 +70,7 @@ function ContentPlaceholder({ type }: { type: LessonType }) {
   );
 }
 
-function MarkdownContent({ content }: { content: string }) {
+function MarkdownSection({ content }: { content: string }) {
   return (
     <div className="prose prose-sm dark:prose-invert max-w-none">
       <ReactMarkdown
@@ -106,10 +109,75 @@ function MarkdownContent({ content }: { content: string }) {
   );
 }
 
+/**
+ * Renders markdown content, splitting on :::terminal labId::: blocks
+ * and rendering TerminalBlock components inline.
+ */
+function MarkdownContent({
+  content,
+  courseId,
+  token,
+}: {
+  content: string;
+  courseId: string;
+  token: string;
+}) {
+  // Split content on :::terminal <labId>::: blocks
+  const terminalRegex = /:::terminal\s+([\w-]+)\s*:::/g;
+  const parts: Array<{ type: "markdown" | "terminal"; content: string }> = [];
+  let lastIndex = 0;
+
+  let match;
+  while ((match = terminalRegex.exec(content)) !== null) {
+    // Add markdown before the terminal block
+    if (match.index > lastIndex) {
+      const mdContent = content.substring(lastIndex, match.index).trim();
+      if (mdContent) {
+        parts.push({ type: "markdown", content: mdContent });
+      }
+    }
+    // Add terminal block
+    parts.push({ type: "terminal", content: match[1] });
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining markdown after last terminal block
+  if (lastIndex < content.length) {
+    const remaining = content.substring(lastIndex).trim();
+    if (remaining) {
+      parts.push({ type: "markdown", content: remaining });
+    }
+  }
+
+  // If no terminal blocks found, render plain markdown
+  if (parts.length === 0) {
+    return <MarkdownSection content={content} />;
+  }
+
+  return (
+    <div className="space-y-4">
+      {parts.map((part, index) =>
+        part.type === "terminal" ? (
+          <TerminalBlock
+            key={`terminal-${index}`}
+            labId={part.content}
+            courseId={courseId}
+            token={token}
+          />
+        ) : (
+          <MarkdownSection key={`md-${index}`} content={part.content} />
+        )
+      )}
+    </div>
+  );
+}
+
 export function LessonContent({
   courseSlug,
+  courseId,
   lesson,
   enrollmentId,
+  token,
   isCompleted,
   onMarkComplete,
   onNext,
@@ -192,7 +260,11 @@ export function LessonContent({
         <>
           {(content.type === "markdown" || content.type === "document") &&
             content.markdownContent && (
-              <MarkdownContent content={content.markdownContent} />
+              <MarkdownContent
+                content={content.markdownContent}
+                courseId={courseId}
+                token={token}
+              />
             )}
 
           {content.type === "quiz" && content.quizData && (

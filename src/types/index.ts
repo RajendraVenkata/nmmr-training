@@ -359,3 +359,45 @@ export interface CourseImageMeta {
   altText: string;
   createdAt: string;
 }
+
+// ============================================================
+// Lab Types (Terminal / Remote Command Execution)
+// ============================================================
+
+export interface LabPreloadFile {
+  path: string;
+  content: string;
+}
+
+export interface LabResources {
+  cpuLimit: number;
+  memoryLimit: string;
+  diskLimit: string;
+  timeoutMinutes: number;
+}
+
+export interface LabDefinition {
+  id: string;
+  labId: string;
+  name: string;
+  dockerImage: string;
+  description: string;
+  resources: LabResources;
+  preloadFiles: LabPreloadFile[];
+  startupCommand: string | null;
+  networkEnabled: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LabListItem {
+  id: string;
+  labId: string;
+  name: string;
+  dockerImage: string;
+  description: string;
+  resources: LabResources;
+  isActive: boolean;
+  lessonsUsingLab?: number;
+}
