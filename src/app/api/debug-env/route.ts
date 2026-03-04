@@ -1,45 +1,26 @@
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { User } from "@/lib/models/User";
+import { NextResponse, NextRequest } from "next/server";
+import { handlers } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const results: Record<string, unknown> = {};
 
-  // Test 1: DB connection
+  // Test: Call the NextAuth GET handler directly with a csrf request
   try {
-    await connectDB();
-    results.db = "connected";
+    const csrfUrl = new URL("/api/auth/csrf", request.url);
+    const fakeReq = new NextRequest(csrfUrl, {
+      method: "GET",
+      headers: request.headers,
+    });
+    const response = await handlers.GET(fakeReq);
+    results.handlerStatus = response.status;
+    const body = await response.text();
+    results.handlerBody = body.substring(0, 500);
   } catch (err: unknown) {
-    results.db = `failed: ${err instanceof Error ? err.message : String(err)}`;
-    return NextResponse.json(results);
-  }
-
-  // Test 2: Check if user exists
-  try {
-    const user = await User.findOne({ email: "rajendra.venkata@gmail.com" });
-    results.userFound = !!user;
-    results.userHasPasswordHash = !!(user?.passwordHash);
-    results.userProvider = user?.provider ?? "not set";
-    results.userRole = user?.role ?? "not set";
-  } catch (err: unknown) {
-    results.userLookup = `failed: ${err instanceof Error ? err.message : String(err)}`;
-  }
-
-  // Test 3: Test NextAuth CSRF endpoint
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-    const csrfRes = await fetch(`${baseUrl}/api/auth/csrf`);
-    results.csrfStatus = csrfRes.status;
-    if (csrfRes.ok) {
-      const csrfData = await csrfRes.json();
-      results.csrfTokenPresent = !!csrfData.csrfToken;
-    } else {
-      results.csrfBody = await csrfRes.text().then(t => t.substring(0, 200));
-    }
-  } catch (err: unknown) {
-    results.csrfTest = `failed: ${err instanceof Error ? err.message : String(err)}`;
+    results.handlerError = err instanceof Error
+      ? { message: err.message, stack: err.stack?.split("\n").slice(0, 5) }
+      : String(err);
   }
 
   return NextResponse.json(results);
