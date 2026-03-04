@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Lab } from "@/lib/models/Lab";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/admin/labs/:labId — get specific lab config
 export async function GET(
   request: Request,
@@ -31,13 +33,13 @@ export async function GET(
       name: lab.name,
       dockerImage: lab.dockerImage,
       description: lab.description,
-      resources: lab.resources,
-      preloadFiles: lab.preloadFiles,
-      startupCommand: lab.startupCommand,
-      networkEnabled: lab.networkEnabled,
-      isActive: lab.isActive,
-      createdAt: lab.createdAt?.toISOString(),
-      updatedAt: lab.updatedAt?.toISOString(),
+      resources: lab.resources || { cpuLimit: 0.5, memoryLimit: "256m", diskLimit: "100m", timeoutMinutes: 30 },
+      preloadFiles: lab.preloadFiles || [],
+      startupCommand: lab.startupCommand || null,
+      networkEnabled: lab.networkEnabled ?? false,
+      isActive: lab.isActive ?? true,
+      createdAt: lab.createdAt ? new Date(lab.createdAt).toISOString() : null,
+      updatedAt: lab.updatedAt ? new Date(lab.updatedAt).toISOString() : null,
     });
   } catch (err) {
     console.error(`GET /api/admin/labs/${params.labId} error:`, err);
