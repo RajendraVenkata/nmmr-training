@@ -5,14 +5,15 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET,
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    }),
-    Credentials({
+const providers = [
+  ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET &&
+      process.env.GOOGLE_CLIENT_ID !== "your-google-client-id"
+    ? [Google({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      })]
+    : []),
+  Credentials({
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -47,7 +48,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
-  ],
+];
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  secret: process.env.AUTH_SECRET,
+  providers,
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
