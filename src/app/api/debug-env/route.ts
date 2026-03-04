@@ -30,7 +30,7 @@ export async function GET() {
   let authStatus = "not tested";
   try {
     const { auth } = await import("@/lib/auth");
-    authStatus = auth ? "initialized" : "null";
+    authStatus = typeof auth === "function" ? "initialized" : "null";
   } catch (err: unknown) {
     authStatus = `failed: ${err instanceof Error ? err.message : String(err)}`;
   }
