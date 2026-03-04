@@ -14,7 +14,7 @@ export async function GET() {
     }
 
     await connectDB();
-    const labs = await Lab.find().sort({ createdAt: -1 }).lean();
+    const labs = await Lab.find().sort({ _id: -1 }).lean();
 
     const result = labs.map((lab) => ({
       id: lab._id.toString(),

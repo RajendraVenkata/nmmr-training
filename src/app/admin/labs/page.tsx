@@ -57,13 +57,18 @@ export default function AdminLabsPage() {
   async function fetchLabs() {
     try {
       const res = await fetch("/api/admin/labs");
-      if (!res.ok) throw new Error("Failed to fetch");
+      if (!res.ok) {
+        const errBody = await res.text();
+        console.error("Labs API error:", res.status, errBody);
+        throw new Error(`Failed to fetch (${res.status})`);
+      }
       const data = await res.json();
-      setLabs(data.labs);
-    } catch {
+      setLabs(data.labs || []);
+    } catch (err) {
+      console.error("fetchLabs error:", err);
       toast({
         title: "Error",
-        description: "Failed to load labs",
+        description: err instanceof Error ? err.message : "Failed to load labs",
         variant: "destructive",
       });
     } finally {
