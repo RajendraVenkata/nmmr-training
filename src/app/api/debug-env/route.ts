@@ -1,43 +1,46 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import { User } from "@/lib/models/User";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  // Test 1: Environment variables
-  const envCheck = {
-    hasAuthSecret: !!process.env.AUTH_SECRET,
-    authSecretLength: process.env.AUTH_SECRET?.length ?? 0,
-    hasDatabaseUrl: !!process.env.DATABASE_URL,
-    databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 15) ?? "NOT SET",
-    hasNextAuthUrl: !!process.env.NEXTAUTH_URL,
-    nextAuthUrl: process.env.NEXTAUTH_URL ?? "NOT SET",
-    hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
-    googleClientIdPrefix: process.env.GOOGLE_CLIENT_ID?.substring(0, 10) ?? "NOT SET",
-    nodeEnv: process.env.NODE_ENV ?? "NOT SET",
-  };
+  const results: Record<string, unknown> = {};
 
-  // Test 2: Database connection
-  let dbStatus = "not tested";
+  // Test 1: DB connection
   try {
     await connectDB();
-    dbStatus = "connected";
+    results.db = "connected";
   } catch (err: unknown) {
-    dbStatus = `failed: ${err instanceof Error ? err.message : String(err)}`;
+    results.db = `failed: ${err instanceof Error ? err.message : String(err)}`;
+    return NextResponse.json(results);
   }
 
-  // Test 3: NextAuth import
-  let authStatus = "not tested";
+  // Test 2: Check if user exists
   try {
-    const { auth } = await import("@/lib/auth");
-    authStatus = typeof auth === "function" ? "initialized" : "null";
+    const user = await User.findOne({ email: "rajendra.venkata@gmail.com" });
+    results.userFound = !!user;
+    results.userHasPasswordHash = !!(user?.passwordHash);
+    results.userProvider = user?.provider ?? "not set";
+    results.userRole = user?.role ?? "not set";
   } catch (err: unknown) {
-    authStatus = `failed: ${err instanceof Error ? err.message : String(err)}`;
+    results.userLookup = `failed: ${err instanceof Error ? err.message : String(err)}`;
   }
 
-  return NextResponse.json({
-    envCheck,
-    dbStatus,
-    authStatus,
-  });
+  // Test 3: Test NextAuth CSRF endpoint
+  try {
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const csrfRes = await fetch(`${baseUrl}/api/auth/csrf`);
+    results.csrfStatus = csrfRes.status;
+    if (csrfRes.ok) {
+      const csrfData = await csrfRes.json();
+      results.csrfTokenPresent = !!csrfData.csrfToken;
+    } else {
+      results.csrfBody = await csrfRes.text().then(t => t.substring(0, 200));
+    }
+  } catch (err: unknown) {
+    results.csrfTest = `failed: ${err instanceof Error ? err.message : String(err)}`;
+  }
+
+  return NextResponse.json(results);
 }
