@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -58,6 +58,8 @@ export default function ContentManagementPage({
   const [notFound, setNotFound] = useState(false);
 
   const [modules, setModules] = useState<ModuleState[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetch(`/api/admin/courses/${id}`)
@@ -127,6 +129,7 @@ export default function ContentManagementPage({
       lessons: [],
     };
     setModules((prev) => [...prev, newModule]);
+    setIsDirty(true);
     toast({ title: "Module added", description: `"${data.title}" has been added.` });
   }
 
@@ -134,11 +137,13 @@ export default function ContentManagementPage({
     setModules((prev) =>
       prev.map((m) => (m.id === moduleId ? { ...m, title: data.title } : m))
     );
+    setIsDirty(true);
     toast({ title: "Module updated" });
   }
 
   function handleDeleteModule(moduleId: string) {
     setModules((prev) => prev.filter((m) => m.id !== moduleId));
+    setIsDirty(true);
     toast({ title: "Module deleted" });
   }
 
@@ -157,6 +162,7 @@ export default function ContentManagementPage({
         return { ...m, lessons: [...m.lessons, newLesson] };
       })
     );
+    setIsDirty(true);
     toast({ title: "Lesson added", description: `"${data.title}" has been added.` });
   }
 
@@ -184,6 +190,7 @@ export default function ContentManagementPage({
         };
       })
     );
+    setIsDirty(true);
     toast({ title: "Lesson updated" });
   }
 
@@ -194,7 +201,81 @@ export default function ContentManagementPage({
         return { ...m, lessons: m.lessons.filter((l) => l.id !== lessonId) };
       })
     );
+    setIsDirty(true);
     toast({ title: "Lesson deleted" });
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const payload = {
+        modules: modules.map((m, mi) => ({
+          ...(m.id.startsWith("m-new-") ? {} : { _id: m.id }),
+          title: m.title,
+          order: mi + 1,
+          lessons: m.lessons.map((l, li) => ({
+            ...(l.id.startsWith("l-new-") ? {} : { _id: l.id }),
+            title: l.title,
+            type: l.type,
+            duration: l.duration,
+            order: li + 1,
+            isFree: l.isFree,
+          })),
+        })),
+      };
+
+      const res = await fetch(`/api/admin/courses/${id}/content`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to save");
+      }
+
+      const data = await res.json();
+      setIsDirty(false);
+      toast({
+        title: "Content saved",
+        description: `${data.modulesCount} modules, ${data.lessonsCount} lessons saved successfully.`,
+      });
+
+      // Reload to get fresh IDs from MongoDB
+      const courseRes = await fetch(`/api/admin/courses/${id}`);
+      if (courseRes.ok) {
+        const courseData = await courseRes.json();
+        if (courseData && !courseData.error) {
+          setCourse(courseData);
+          setModules(
+            (courseData.modules || []).map(
+              (m: CourseData["modules"][number], mi: number) => ({
+                id: m._id,
+                title: m.title,
+                order: mi + 1,
+                lessons: (m.lessons || []).map((l, li) => ({
+                  id: l._id,
+                  title: l.title,
+                  type: l.type,
+                  duration: l.duration,
+                  order: li + 1,
+                  isFree: l.isFree,
+                })),
+              })
+            )
+          );
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error saving",
+        description: error instanceof Error ? error.message : "Something went wrong.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   }
 
   const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0);
@@ -215,9 +296,24 @@ export default function ContentManagementPage({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Badge variant="secondary">{modules.length} modules</Badge>
-        <Badge variant="secondary">{totalLessons} lessons</Badge>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Badge variant="secondary">{modules.length} modules</Badge>
+          <Badge variant="secondary">{totalLessons} lessons</Badge>
+          {isDirty && (
+            <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700">
+              Unsaved changes
+            </Badge>
+          )}
+        </div>
+        <Button onClick={handleSave} disabled={!isDirty || saving}>
+          {saving ? (
+            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-1.5" />
+          )}
+          {saving ? "Saving..." : "Save Changes"}
+        </Button>
       </div>
 
       <ModuleEditor
