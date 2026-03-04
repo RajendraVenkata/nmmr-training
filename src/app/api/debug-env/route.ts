@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
@@ -6,10 +6,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const results: Record<string, unknown> = {};
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
-  // Test: Create a minimal NextAuth instance to isolate the error
+  // Test 1: Minimal NextAuth — no DB, no Google
   try {
-    // Test 1: Bare minimum — just secret + credentials provider
     const minimalAuth = NextAuth({
       secret: process.env.AUTH_SECRET,
       providers: [
@@ -27,28 +27,27 @@ export async function GET() {
     });
     results.minimalInit = "ok";
 
-    // Test 2: Call the minimal handler
-    const csrfUrl = new URL("/api/auth/csrf", process.env.NEXTAUTH_URL || "http://localhost:3000");
-    const req = new Request(csrfUrl.toString(), { method: "GET" });
+    const csrfUrl = new URL("/api/auth/csrf", baseUrl);
+    const req = new NextRequest(csrfUrl);
     const res = await minimalAuth.handlers.GET(req);
-    results.minimalHandlerStatus = res.status;
+    results.minimalStatus = res.status;
     const body = await res.text();
-    results.minimalHandlerBody = body.substring(0, 300);
+    results.minimalBody = body.substring(0, 300);
   } catch (err: unknown) {
     results.minimalError = err instanceof Error
       ? { name: err.name, message: err.message, stack: err.stack?.split("\n").slice(0, 8) }
       : String(err);
   }
 
-  // Test 3: Now test with the actual auth config (DB-dependent)
+  // Test 2: Real auth config
   try {
     const { handlers } = await import("@/lib/auth");
-    const csrfUrl = new URL("/api/auth/csrf", process.env.NEXTAUTH_URL || "http://localhost:3000");
-    const req = new Request(csrfUrl.toString(), { method: "GET" });
+    const csrfUrl = new URL("/api/auth/csrf", baseUrl);
+    const req = new NextRequest(csrfUrl);
     const res = await handlers.GET(req);
-    results.realHandlerStatus = res.status;
+    results.realStatus = res.status;
     const body = await res.text();
-    results.realHandlerBody = body.substring(0, 300);
+    results.realBody = body.substring(0, 300);
   } catch (err: unknown) {
     results.realError = err instanceof Error
       ? { name: err.name, message: err.message, stack: err.stack?.split("\n").slice(0, 8) }
