@@ -59,26 +59,26 @@ export function TerminalWidget({ labId, courseId, token }: TerminalWidgetProps) 
         fontSize: 14,
         fontFamily: "JetBrains Mono, Menlo, Monaco, monospace",
         theme: {
-          background: "#1e1e2e",
-          foreground: "#cdd6f4",
-          cursor: "#f5e0dc",
-          selectionBackground: "#45475a",
-          black: "#45475a",
-          red: "#f38ba8",
-          green: "#a6e3a1",
-          yellow: "#f9e2af",
-          blue: "#89b4fa",
-          magenta: "#f5c2e7",
-          cyan: "#94e2d5",
-          white: "#bac2de",
-          brightBlack: "#585b70",
-          brightRed: "#f38ba8",
-          brightGreen: "#a6e3a1",
-          brightYellow: "#f9e2af",
-          brightBlue: "#89b4fa",
-          brightMagenta: "#f5c2e7",
-          brightCyan: "#94e2d5",
-          brightWhite: "#a6adc8",
+          background: "#ffffff",
+          foreground: "#1e293b",
+          cursor: "#2563eb",
+          selectionBackground: "#dbeafe",
+          black: "#64748b",
+          red: "#dc2626",
+          green: "#16a34a",
+          yellow: "#ca8a04",
+          blue: "#2563eb",
+          magenta: "#9333ea",
+          cyan: "#0891b2",
+          white: "#f1f5f9",
+          brightBlack: "#94a3b8",
+          brightRed: "#ef4444",
+          brightGreen: "#22c55e",
+          brightYellow: "#eab308",
+          brightBlue: "#3b82f6",
+          brightMagenta: "#a855f7",
+          brightCyan: "#06b6d4",
+          brightWhite: "#f8fafc",
         },
         allowProposedApi: true,
       });
@@ -231,8 +231,8 @@ export function TerminalWidget({ labId, courseId, token }: TerminalWidgetProps) 
       </div>
       <div
         ref={terminalRef}
-        className="rounded-md overflow-hidden border border-[#313244]"
-        style={{ minHeight: "300px", background: "#1e1e2e" }}
+        className="rounded-md overflow-hidden border border-border/60"
+        style={{ minHeight: "300px", background: "#ffffff" }}
       />
     </div>
   );

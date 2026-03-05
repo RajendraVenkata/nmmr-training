@@ -30,20 +30,20 @@ export function TerminalBlock({ labId, courseId, token }: TerminalBlockProps) {
 
   if (!started) {
     return (
-      <div className="my-4 rounded-lg border border-[#313244] bg-[#1e1e2e] p-6">
+      <div className="my-4 rounded-lg border border-border/60 bg-muted/30 p-6">
         <div className="flex flex-col items-center gap-3 text-center">
-          <Terminal className="h-10 w-10 text-[#94e2d5]" />
+          <Terminal className="h-10 w-10 text-primary" />
           <div>
-            <h4 className="font-semibold text-[#cdd6f4]">
+            <h4 className="font-semibold text-foreground">
               Interactive Terminal: {labId}
             </h4>
-            <p className="text-sm text-[#a6adc8] mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Click below to start a live terminal session in a Docker container.
             </p>
           </div>
           <button
             onClick={() => setStarted(true)}
-            className="mt-2 px-6 py-2 rounded-md bg-[#94e2d5] hover:bg-[#a6e3a1] text-[#1e1e2e] font-medium text-sm transition-colors"
+            className="mt-2 px-6 py-2 rounded-full bg-primary hover:bg-primary/90 text-white font-medium text-sm transition-colors"
           >
             Launch Terminal
           </button>
@@ -55,19 +55,19 @@ export function TerminalBlock({ labId, courseId, token }: TerminalBlockProps) {
   return (
     <div
       className={cn(
-        "my-4 rounded-lg border border-[#313244] overflow-hidden",
-        expanded && "fixed inset-4 z-50 bg-[#1e1e2e] flex flex-col"
+        "my-4 rounded-lg border border-border/60 overflow-hidden",
+        expanded && "fixed inset-4 z-50 bg-white flex flex-col"
       )}
     >
       {/* Header bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-[#181825] border-b border-[#313244]">
-        <div className="flex items-center gap-2 text-xs text-[#a6adc8]">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border-b border-border/60">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Terminal className="h-3.5 w-3.5" />
           <span>{labId}</span>
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-[#a6adc8] hover:text-[#cdd6f4] transition-colors"
+          className="text-muted-foreground hover:text-foreground transition-colors"
         >
           {expanded ? (
             <Minimize2 className="h-3.5 w-3.5" />
