@@ -72,7 +72,7 @@ function ContentPlaceholder({ type }: { type: LessonType }) {
 
 function MarkdownSection({ content }: { content: string }) {
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none">
+    <div className="prose prose-sm max-w-none">
       <ReactMarkdown
         components={{
           code({ className, children, ...props }) {
@@ -289,7 +289,7 @@ export function LessonContent({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t">
         <div>
           {isCompleted ? (
-            <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 gap-1">
+            <Badge className="bg-green-500/10 text-green-600 gap-1">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Completed
             </Badge>

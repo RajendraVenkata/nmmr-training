@@ -213,7 +213,7 @@ export default function AdminLabsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-red-600 dark:text-red-400"
+                          className="h-8 w-8 text-red-600"
                           onClick={() => {
                             setLabToDelete(lab);
                             setDeleteDialogOpen(true);

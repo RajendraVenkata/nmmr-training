@@ -30,9 +30,9 @@ interface CourseTableProps {
 }
 
 const statusColors: Record<string, string> = {
-  published: "bg-green-500/10 text-green-600 dark:text-green-400",
-  draft: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
-  archived: "bg-gray-500/10 text-gray-600 dark:text-gray-400",
+  published: "bg-green-500/10 text-green-600",
+  draft: "bg-yellow-500/10 text-yellow-600",
+  archived: "bg-gray-500/10 text-gray-600",
 };
 
 export function CourseTable({ courses }: CourseTableProps) {

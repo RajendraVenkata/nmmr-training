@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - remote-cmd
+      - remote-cmd-lf
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:

@@ -33,7 +33,7 @@ export function MobileMenu() {
       <SheetContent side="right" className="w-[300px] sm:w-[350px]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-accent" />
+            <GraduationCap className="h-6 w-6 text-primary" />
             {COMPANY.name}
           </SheetTitle>
         </SheetHeader>
@@ -99,7 +99,7 @@ export function MobileMenu() {
                 setOpen(false);
                 signOut({ callbackUrl: "/" });
               }}
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-muted"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-muted"
             >
               <LogOut className="h-4 w-4" />
               Sign Out

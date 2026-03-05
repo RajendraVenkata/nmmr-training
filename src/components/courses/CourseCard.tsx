@@ -25,9 +25,9 @@ interface CourseCardProps {
 }
 
 const difficultyColors: Record<string, string> = {
-  beginner: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  intermediate: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-  advanced: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  beginner: "bg-green-100 text-green-800",
+  intermediate: "bg-amber-100 text-amber-800",
+  advanced: "bg-red-100 text-red-800",
 };
 
 export function CourseCard({
@@ -45,7 +45,7 @@ export function CourseCard({
 }: CourseCardProps) {
   return (
     <Link href={isEnrolled ? `/dashboard/courses/${slug}` : `/courses/${slug}`}>
-      <Card className="h-full transition-all hover:shadow-lg hover:border-accent/50">
+      <Card className="h-full transition-all hover:shadow-lg hover:border-primary/30">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-2 mb-2">
             <Badge variant="secondary" className="text-xs">
@@ -76,14 +76,14 @@ export function CourseCard({
           </div>
           <div className="flex items-center justify-between">
             {isEnrolled ? (
-              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-600 dark:text-green-400">
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-600">
                 <CheckCircle2 className="h-4 w-4" />
                 Enrolled
               </span>
             ) : (
               <span className="text-lg font-bold">
                 {price === 0 ? (
-                  <span className="text-green-600 dark:text-green-400">Free</span>
+                  <span className="text-green-600">Free</span>
                 ) : (
                   formatPrice(price, currency)
                 )}

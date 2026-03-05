@@ -28,8 +28,8 @@ const stats = (props: LearningStatsProps) => [
     label: "Hours Learned",
     value: props.totalHours,
     icon: Clock,
-    color: "text-accent",
-    bgColor: "bg-accent/10",
+    color: "text-primary",
+    bgColor: "bg-primary/5",
   },
 ];
 

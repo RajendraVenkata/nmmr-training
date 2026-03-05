@@ -146,15 +146,15 @@ export function QuizPlayer({
                     key={qi}
                     className={`p-4 rounded-lg border ${
                       qResult?.correct
-                        ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30"
-                        : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30"
+                        ? "border-green-200 bg-green-50"
+                        : "border-red-200 bg-red-50"
                     }`}
                   >
                     <div className="flex items-start gap-2">
                       {qResult?.correct ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
                       ) : (
-                        <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+                        <XCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                       )}
                       <div>
                         <p className="font-medium text-sm">{q.questionText}</p>

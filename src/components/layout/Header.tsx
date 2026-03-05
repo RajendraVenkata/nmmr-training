@@ -19,7 +19,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { NAV_ITEMS, COMPANY } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -36,12 +35,12 @@ export function Header() {
     .slice(0, 2);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-white">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <GraduationCap className="h-7 w-7 text-accent" />
-          <span className="text-lg font-bold">{COMPANY.name}</span>
+          <GraduationCap className="h-7 w-7 text-primary" />
+          <span className="text-lg font-bold text-foreground">{COMPANY.name}</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -51,11 +50,10 @@ export function Header() {
               key={item.href}
               href={item.href}
               className={cn(
-                "px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                "hover:bg-muted hover:text-foreground",
+                "px-3 py-2 text-sm font-medium transition-colors",
                 pathname === item.href
                   ? "text-foreground"
-                  : "text-muted-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {item.label}
@@ -63,10 +61,8 @@ export function Header() {
           ))}
         </nav>
 
-        {/* Right side: Theme toggle + Auth + Mobile menu */}
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-
+        {/* Right side: Auth + Mobile menu */}
+        <div className="flex items-center gap-3">
           {session?.user ? (
             /* Authenticated user dropdown */
             <DropdownMenu>
@@ -116,7 +112,7 @@ export function Header() {
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                  className="cursor-pointer text-red-600 focus:text-red-600"
                   onClick={() => signOut({ callbackUrl: "/" })}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -126,12 +122,15 @@ export function Header() {
             </DropdownMenu>
           ) : (
             /* Guest auth buttons (desktop) */
-            <div className="hidden md:flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Login</Link>
-              </Button>
+            <div className="hidden md:flex items-center gap-3">
+              <Link
+                href="/login"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Log in
+              </Link>
               <Button size="sm" asChild>
-                <Link href="/register">Get Started</Link>
+                <Link href="/register">Try now</Link>
               </Button>
             </div>
           )}

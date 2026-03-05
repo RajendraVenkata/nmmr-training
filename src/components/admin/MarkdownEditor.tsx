@@ -245,7 +245,7 @@ export function MarkdownEditor({
         </TabsContent>
 
         <TabsContent value="preview" className="mt-2">
-          <div className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-4 min-h-[300px]">
+          <div className="prose prose-sm max-w-none border rounded-md p-4 min-h-[300px]">
             {value ? (
               <ReactMarkdown
                 components={{
