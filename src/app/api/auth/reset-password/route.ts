@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const result = resetPasswordSchema.safeParse(body);
 
     if (!result.success) {
-      const firstError = result.error.errors[0]?.message || "Invalid input.";
+      const firstError = result.error.issues[0]?.message || "Invalid input.";
       return NextResponse.json({ message: firstError }, { status: 400 });
     }
 
