@@ -218,7 +218,18 @@ export function MarkdownEditor({
                 onClick={() => {
                   const labId = prompt("Enter Lab ID (e.g., python-basics):");
                   if (labId && labId.trim()) {
-                    insertAtCursor(`\n:::terminal ${labId.trim()}\n:::\n`, "");
+                    const durationStr = prompt(
+                      "Timer duration in minutes (leave empty for default):"
+                    );
+                    const duration = durationStr ? parseInt(durationStr, 10) : null;
+                    const durationSuffix =
+                      duration && !isNaN(duration) && duration > 0
+                        ? ` ${duration}`
+                        : "";
+                    insertAtCursor(
+                      `\n:::terminal ${labId.trim()}${durationSuffix}:::\n`,
+                      ""
+                    );
                   }
                 }}
                 title="Insert terminal block"

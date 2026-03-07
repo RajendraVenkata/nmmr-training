@@ -122,9 +122,14 @@ function MarkdownContent({
   courseId: string;
   token: string;
 }) {
-  // Split content on :::terminal <labId>::: blocks
-  const terminalRegex = /:::terminal\s+([\w-]+)\s*:::/g;
-  const parts: Array<{ type: "markdown" | "terminal"; content: string }> = [];
+  // Split content on :::terminal <labId> [duration]:::: blocks
+  // duration is optional, in minutes (e.g. :::terminal python-basics 15:::)
+  const terminalRegex = /:::terminal\s+([\w-]+)(?:\s+(\d+))?\s*:::/g;
+  const parts: Array<{
+    type: "markdown" | "terminal";
+    content: string;
+    duration?: number;
+  }> = [];
   let lastIndex = 0;
 
   let match;
@@ -136,8 +141,12 @@ function MarkdownContent({
         parts.push({ type: "markdown", content: mdContent });
       }
     }
-    // Add terminal block
-    parts.push({ type: "terminal", content: match[1] });
+    // Add terminal block with optional duration
+    parts.push({
+      type: "terminal",
+      content: match[1],
+      duration: match[2] ? parseInt(match[2], 10) : undefined,
+    });
     lastIndex = match.index + match[0].length;
   }
 
@@ -163,6 +172,7 @@ function MarkdownContent({
             labId={part.content}
             courseId={courseId}
             token={token}
+            duration={part.duration}
           />
         ) : (
           <MarkdownSection key={`md-${index}`} content={part.content} />

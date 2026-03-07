@@ -6,11 +6,13 @@ import {
   TerminalConnectionStatus,
   type ConnectionState,
 } from "./TerminalConnectionStatus";
+import { TerminalTimer } from "./TerminalTimer";
 
 interface TerminalWidgetProps {
   labId: string;
   courseId: string;
   token: string;
+  timeoutMs?: number;
 }
 
 // Dynamic import xterm to avoid SSR issues
@@ -28,7 +30,7 @@ async function loadXterm() {
   }
 }
 
-export function TerminalWidget({ labId, courseId, token }: TerminalWidgetProps) {
+export function TerminalWidget({ labId, courseId, token, timeoutMs: timeoutMsProp }: TerminalWidgetProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<InstanceType<typeof import("@xterm/xterm").Terminal> | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -36,6 +38,8 @@ export function TerminalWidget({ labId, courseId, token }: TerminalWidgetProps) 
   const [connectionState, setConnectionState] = useState<ConnectionState>("disconnected");
   const [labName, setLabName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [activeTimeoutMs, setActiveTimeoutMs] = useState<number>(0);
+  const [lastActivityTime, setLastActivityTime] = useState<number>(Date.now());
 
   const wsUrl = process.env.NEXT_PUBLIC_TERMINAL_WS_URL || "ws://localhost:8080";
 
@@ -113,8 +117,14 @@ export function TerminalWidget({ labId, courseId, token }: TerminalWidgetProps) 
           if (msg.type === "ready") {
             setConnectionState("connected");
             setLabName(msg.message || labId);
+            const timeout = timeoutMsProp || msg.timeoutMs || 0;
+            setActiveTimeoutMs(timeout);
+            setLastActivityTime(Date.now());
             term.writeln(`\x1b[32m● ${msg.message || "Connected"}\x1b[0m\r\n`);
             term.focus();
+            return;
+          }
+          if (msg.type === "activity_ack") {
             return;
           }
           if (msg.type === "system") {
@@ -154,6 +164,7 @@ export function TerminalWidget({ labId, courseId, token }: TerminalWidgetProps) 
     term.onData((data) => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(data);
+        setLastActivityTime(Date.now());
       }
     });
 
@@ -206,11 +217,20 @@ export function TerminalWidget({ labId, courseId, token }: TerminalWidgetProps) 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <TerminalConnectionStatus
-          state={connectionState}
-          labName={labName}
-          errorMessage={errorMessage}
-        />
+        <div className="flex items-center gap-3">
+          <TerminalConnectionStatus
+            state={connectionState}
+            labName={labName}
+            errorMessage={errorMessage}
+          />
+          {activeTimeoutMs > 0 && (
+            <TerminalTimer
+              timeoutMs={activeTimeoutMs}
+              lastActivityTime={lastActivityTime}
+              isConnected={connectionState === "connected"}
+            />
+          )}
+        </div>
         <div className="flex gap-2">
           {connectionState === "disconnected" || connectionState === "error" ? (
             <button

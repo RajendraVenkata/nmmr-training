@@ -9,9 +9,10 @@ interface TerminalBlockProps {
   labId: string;
   courseId: string;
   token: string;
+  duration?: number; // in minutes
 }
 
-export function TerminalBlock({ labId, courseId, token }: TerminalBlockProps) {
+export function TerminalBlock({ labId, courseId, token, duration }: TerminalBlockProps) {
   const [expanded, setExpanded] = useState(false);
   const [started, setStarted] = useState(false);
 
@@ -79,7 +80,12 @@ export function TerminalBlock({ labId, courseId, token }: TerminalBlockProps) {
 
       {/* Terminal */}
       <div className={cn("p-2", expanded && "flex-1")}>
-        <TerminalWidget labId={labId} courseId={courseId} token={token} />
+        <TerminalWidget
+          labId={labId}
+          courseId={courseId}
+          token={token}
+          timeoutMs={duration ? duration * 60 * 1000 : undefined}
+        />
       </div>
     </div>
   );
