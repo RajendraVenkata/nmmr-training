@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { COMPANY, SITE } from "@/lib/constants";
+import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = createMetadata({
   title: SITE.title,
@@ -88,7 +89,8 @@ const VALUE_PROPS = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
   return (
     <>
       {/* Hero Section */}
@@ -111,9 +113,15 @@ export default function Home() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/register">Create Free Account</Link>
-              </Button>
+              {session ? (
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/dashboard">Go to Dashboard</Link>
+                </Button>
+              ) : (
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/register">Create Free Account</Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -179,12 +187,21 @@ export default function Home() {
               for. Start with a free account today.
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Button size="lg" asChild>
-                <Link href="/register">
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
+              {session ? (
+                <Button size="lg" asChild>
+                  <Link href="/dashboard">
+                    Go to Dashboard
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button size="lg" asChild>
+                  <Link href="/register">
+                    Get Started Free
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              )}
               <Button size="lg" variant="outline" asChild>
                 <Link href="/contact">Contact Us</Link>
               </Button>
