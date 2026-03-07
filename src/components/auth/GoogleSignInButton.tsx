@@ -1,23 +1,18 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { googleSignIn } from "@/app/login/actions";
 
-export function GoogleSignInButton() {
-  const [loading, setLoading] = useState(false);
-
-  const handleClick = () => {
-    setLoading(true);
-    signIn("google", { callbackUrl: "/dashboard" });
-  };
+function SubmitButton() {
+  const { pending } = useFormStatus();
 
   return (
     <Button
+      type="submit"
       variant="outline"
       className="w-full"
-      onClick={handleClick}
-      disabled={loading}
+      disabled={pending}
     >
       <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
         <path
@@ -37,7 +32,15 @@ export function GoogleSignInButton() {
           fill="#EA4335"
         />
       </svg>
-      {loading ? "Connecting..." : "Continue with Google"}
+      {pending ? "Connecting..." : "Continue with Google"}
     </Button>
+  );
+}
+
+export function GoogleSignInButton() {
+  return (
+    <form action={googleSignIn}>
+      <SubmitButton />
+    </form>
   );
 }
