@@ -1,14 +1,20 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend;
 
-const emailFrom = process.env.EMAIL_FROM || "noreply@nmmr.tech";
+function getResend() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 export async function sendPasswordResetEmail(
   email: string,
   resetUrl: string
 ): Promise<void> {
-  await resend.emails.send({
+  const emailFrom = process.env.EMAIL_FROM || "noreply@nmmr.tech";
+  await getResend().emails.send({
     from: emailFrom,
     to: email,
     subject: "Reset your NMMR Training password",
