@@ -74,3 +74,4 @@ If emails don't arrive, check:
 - API key is correct
 - `EMAIL_FROM` domain matches your verified domain in Resend
 - Check the [Resend Logs](https://resend.com/emails) dashboard for delivery status
+
