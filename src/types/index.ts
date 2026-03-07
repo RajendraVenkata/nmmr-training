@@ -361,6 +361,22 @@ export interface CourseImageMeta {
 }
 
 // ============================================================
+// Chat Widget Types
+// ============================================================
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: number;
+}
+
+export interface ChatLead {
+  name: string;
+  mobile: string;
+}
+
+// ============================================================
 // Lab Types (Terminal / Remote Command Execution)
 // ============================================================
 

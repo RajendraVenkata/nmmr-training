@@ -6,6 +6,7 @@ import type { NavItem } from "@/types";
 
 export const COMPANY = {
   name: "NMMR Technologies",
+  shortName: "NMMR Training",
   legalName: "NMMR Technologies Private Limited",
   tagline: "Master AI Skills That Matter",
   description:

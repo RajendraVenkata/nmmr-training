@@ -4,6 +4,7 @@ import { SessionProvider } from "@/components/auth/SessionProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Toaster } from "@/components/ui/toaster";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { SkipToContent } from "@/components/shared/SkipToContent";
 import { ClarityScript } from "@/components/shared/ClarityScript";
 import { SITE } from "@/lib/constants";
@@ -73,6 +74,7 @@ export default function RootLayout({
             <Footer />
           </div>
           <Toaster />
+          <ChatWidget />
         </SessionProvider>
         <ClarityScript />
       </body>
