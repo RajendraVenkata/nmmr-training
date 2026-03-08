@@ -51,7 +51,7 @@ export function Sidebar({ type, className, collapsed = false, onToggleCollapse }
       {onToggleCollapse && (
         <button
           onClick={onToggleCollapse}
-          className="mb-4 flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="mb-4 self-end flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
