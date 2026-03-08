@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+      - remote-cmd
+      - remote-cmd-lf
+      - remote-cmd-lf-content
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
@@ -31,6 +34,8 @@ jobs:
           NEXT_PUBLIC_CLARITY_ID: ${{ vars.NEXT_PUBLIC_CLARITY_ID }}
           NEXT_PUBLIC_CHAT_ENABLED: ${{ vars.NEXT_PUBLIC_CHAT_ENABLED }}
           NEXT_PUBLIC_CHAT_API_URL: ${{ vars.NEXT_PUBLIC_CHAT_API_URL }}
+          NEXT_PUBLIC_TERMINAL_ENABLED: ${{ vars.NEXT_PUBLIC_TERMINAL_ENABLED }}
+          NEXT_PUBLIC_TERMINAL_WS_URL: ${{ vars.NEXT_PUBLIC_TERMINAL_WS_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}

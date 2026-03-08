@@ -1,345 +1,340 @@
 const sampleLessonContent: Record<string, string> = {
-  l3: `# Key Concepts and Terminology
+  // B1.1 Lesson 1 — A brief history of AI (free lesson)
+  l1: `# A Brief History of AI
 
-## Large Language Models (LLMs)
+## From Turing to Transformers
 
-A **Large Language Model** is a neural network trained on vast amounts of text data. These models learn patterns in language and can generate human-like text, answer questions, translate languages, and much more.
+The history of Artificial Intelligence spans over seven decades, from Alan Turing's foundational work to today's generative AI revolution.
 
-### How LLMs Are Trained
+### Key Milestones
 
-LLMs are trained in two main phases:
+| Year | Milestone |
+|------|-----------|
+| **1950** | Alan Turing proposes the Turing Test |
+| **1956** | The term "Artificial Intelligence" is coined at Dartmouth |
+| **1966** | ELIZA — first chatbot that simulated conversation |
+| **1997** | IBM Deep Blue defeats chess world champion |
+| **2012** | AlexNet wins ImageNet — deep learning takes off |
+| **2017** | "Attention Is All You Need" — the Transformer paper |
+| **2022** | ChatGPT launches — generative AI goes mainstream |
 
-1. **Pre-training**: The model learns from billions of text documents
-2. **Fine-tuning**: The model is refined for specific tasks using curated data
+## The Three Waves of AI
 
-\`\`\`python
-# Example: Using an LLM via API
-from anthropic import Anthropic
+### Wave 1: Rule-Based Systems (1950s–1980s)
+Expert systems encoded human knowledge as if-then rules. They were brittle and couldn't learn from data.
 
-client = Anthropic()
+### Wave 2: Machine Learning (1990s–2010s)
+Statistical methods let machines learn patterns from data. Support Vector Machines, Random Forests, and early neural networks emerged.
 
-message = client.messages.create(
-    model="claude-sonnet-4-20250514",
-    max_tokens=1024,
-    messages=[
-        {"role": "user", "content": "What is machine learning?"}
-    ]
-)
-print(message.content[0].text)
+### Wave 3: Deep Learning & Generative AI (2012–Present)
+Deep neural networks with billions of parameters can now generate human-quality text, code, images, and more.
+
+## Why This Matters for You
+
+Understanding AI's history helps you:
+- Appreciate why certain approaches work (and others failed)
+- Predict where the technology is heading
+- Make informed decisions about which AI tools to use
+
+> **Key Takeaway**: AI isn't new — but the Transformer architecture and massive compute have made it transformative.
+`,
+
+  // B1.2 Lesson 1 — From rule-based NLP to neural language models
+  l9: `# From Rule-Based NLP to Neural Language Models
+
+## The Evolution of Language Understanding
+
+### Rule-Based NLP (1960s–1990s)
+
+Early natural language processing relied on hand-crafted rules:
+
+\`\`\`
+IF sentence contains "weather" AND contains "today"
+  THEN respond with current weather data
 \`\`\`
 
-## Key Terms
+**Problems**: Couldn't handle ambiguity, required extensive manual rules, and broke on unexpected input.
 
-| Term | Definition |
-|------|-----------|
-| **Token** | The basic unit of text that LLMs process |
-| **Prompt** | The input text given to an LLM |
-| **Inference** | The process of generating output from a model |
-| **Context Window** | The maximum amount of text a model can process |
-| **Temperature** | Controls randomness in model output |
+### Statistical NLP (2000s–2010s)
+
+Machine learning approaches like n-gram models and word2vec learned patterns from data:
+
+\`\`\`python
+# Example: Simple word frequency approach
+from collections import Counter
+
+def predict_next_word(text, corpus):
+    words = text.split()
+    last_word = words[-1]
+    # Find most common words following last_word in corpus
+    candidates = Counter()
+    for i, w in enumerate(corpus[:-1]):
+        if w == last_word:
+            candidates[corpus[i+1]] += 1
+    return candidates.most_common(1)[0][0]
+\`\`\`
+
+### Neural Language Models (2017–Present)
+
+Transformers changed everything by using **self-attention** to understand relationships between all words simultaneously:
+
+- **2017**: Transformer architecture introduced
+- **2018**: GPT-1 (117M parameters) and BERT
+- **2020**: GPT-3 (175B parameters) — few-shot learning emerges
+- **2023**: GPT-4, Claude 2, Llama 2 — near-human reasoning
+- **2024-2025**: GPT-4o, Claude Opus 4, Gemini 2.5 — multimodal and agentic capabilities
 
 ## Summary
 
-Understanding these key concepts is essential for working effectively with Generative AI. In the next lesson, we'll test your knowledge with a quiz.
+Language models evolved from brittle rules to statistical patterns to neural networks that genuinely understand context.
 `,
 
-  l7: `# Tokenization and Embeddings
+  // B1.3 Lesson 1 — The Transformer architecture
+  l19: `# The Transformer Architecture
 
-## What is Tokenization?
+## The Paper That Changed Everything
 
-Tokenization is the process of breaking text into smaller units called **tokens**. These tokens are the fundamental building blocks that language models process.
+In 2017, Google published "Attention Is All You Need", introducing the **Transformer** architecture. This single paper became the foundation for every major language model today.
 
-### Types of Tokenization
+## How Transformers Work (Simplified)
 
-- **Word-level**: Splits text by spaces and punctuation
-- **Subword-level**: Splits words into meaningful sub-units (BPE, WordPiece)
-- **Character-level**: Each character is a token
+### 1. Tokenization
+Text is broken into tokens (subword units):
+
+\`\`\`
+"Hello, how are you?" → ["Hello", ",", " how", " are", " you", "?"]
+\`\`\`
+
+### 2. Embeddings
+Each token is converted to a numerical vector:
 
 \`\`\`python
-# Example: Tokenization with tiktoken
-import tiktoken
-
-encoder = tiktoken.encoding_for_model("gpt-4")
-tokens = encoder.encode("Hello, world! This is tokenization.")
-print(f"Tokens: {tokens}")
-print(f"Number of tokens: {len(tokens)}")
-
-# Decode back to text
-decoded = encoder.decode(tokens)
-print(f"Decoded: {decoded}")
+# Conceptually:
+"Hello" → [0.12, -0.45, 0.78, ..., 0.33]  # 768-dimensional vector
+"how"   → [0.56, 0.23, -0.11, ..., 0.67]
 \`\`\`
 
-## Understanding Embeddings
+### 3. Self-Attention
+The key innovation — every token "attends to" every other token to understand context:
 
-**Embeddings** are numerical representations of text in a high-dimensional vector space. Similar concepts are placed close together in this space.
+\`\`\`
+"The bank by the river was flooded"
+      ↓
+"bank" attends to "river" → understands it's a riverbank, not a financial bank
+\`\`\`
+
+### 4. Feed-Forward Layers
+After attention, the data passes through neural network layers that process the patterns.
+
+### 5. Output Generation
+The model predicts the next token, one at a time:
+
+\`\`\`
+Input:  "The capital of France is"
+Output: " Paris" (highest probability next token)
+\`\`\`
+
+## Encoder vs Decoder
+
+| Component | Used For | Examples |
+|-----------|----------|----------|
+| **Encoder** | Understanding input | BERT, sentence transformers |
+| **Decoder** | Generating output | GPT, Claude, Llama |
+| **Both** | Translation, summarization | T5, BART |
+
+> **Key Insight**: Most modern LLMs (GPT, Claude, Llama) are **decoder-only** transformers optimized for text generation.
+`,
+
+  // B5.3 Lesson 1 — What is ReAct
+  l178: `# The ReAct Pattern — Reason, Act, Observe
+
+## What is ReAct?
+
+**ReAct** (Reasoning + Acting) is the fundamental pattern behind modern AI agents. It interleaves thinking with doing in a continuous loop.
+
+## The ReAct Cycle
+
+\`\`\`
+1. THOUGHT  → The agent reasons about what to do next
+2. ACTION   → The agent calls a tool or takes a step
+3. OBSERVATION → The result feeds back into the next thought
+4. REPEAT   → Until the agent has a final answer
+\`\`\`
+
+## Example: A ReAct Agent Answering a Question
+
+\`\`\`
+User: "What's the weather like in the capital of France?"
+
+Thought: I need to find the capital of France, then get the weather there.
+Action: search("capital of France")
+Observation: The capital of France is Paris.
+
+Thought: Now I know it's Paris, let me check the weather.
+Action: get_weather("Paris")
+Observation: Paris: 18°C, partly cloudy, humidity 65%
+
+Thought: I now have the answer.
+Final Answer: The weather in Paris (the capital of France) is 18°C
+and partly cloudy with 65% humidity.
+\`\`\`
+
+## Why ReAct Works
+
+1. **Explicit reasoning** makes decisions more transparent
+2. **Tool use** extends the agent beyond what the LLM knows
+3. **Observations** ground the agent in real data
+4. **Iterative refinement** handles multi-step problems
+
+## ReAct vs Direct Prompting
+
+| Approach | Best For |
+|----------|----------|
+| **Direct Prompt** | Simple questions with known answers |
+| **ReAct Agent** | Questions needing tools, real-time data, or multi-step reasoning |
+
+> **Key Takeaway**: ReAct is the Reason → Act → Observe loop that makes AI agents powerful.
+`,
+
+  // I2.2 — Graph Concepts (LangGraph)
+  l419: `# Graph Concepts — Nodes, Edges, State
+
+## Why Graphs for Agent Workflows?
+
+LangGraph models agent workflows as **directed graphs** where:
+- **Nodes** are functions that process data
+- **Edges** connect nodes and define flow
+- **State** is shared data that flows through the graph
+
+## Core Concepts
+
+### 1. StateGraph
 
 \`\`\`python
-# Example: Creating embeddings
-from openai import OpenAI
+from langgraph.graph import StateGraph, START, END
+from typing import TypedDict
 
-client = OpenAI()
+# Define your state schema
+class AgentState(TypedDict):
+    messages: list[str]
+    current_step: str
+    result: str
 
-response = client.embeddings.create(
-    model="text-embedding-3-small",
-    input="Machine learning is a subset of AI"
-)
-
-embedding = response.data[0].embedding
-print(f"Embedding dimensions: {len(embedding)}")
-print(f"First 5 values: {embedding[:5]}")
+# Create the graph
+graph = StateGraph(AgentState)
 \`\`\`
 
-### Why Embeddings Matter
+### 2. Nodes (Functions)
 
-Embeddings enable:
-- **Semantic search**: Find documents by meaning, not just keywords
-- **Clustering**: Group similar documents together
-- **Classification**: Categorize text automatically
-- **RAG systems**: Retrieve relevant context for LLM responses
-`,
-
-  l15: `# Setting Up Your Development Environment
-
-## Prerequisites
-
-Before building AI agents, ensure you have the following installed:
-
-- Python 3.10 or higher
-- pip (Python package manager)
-- A code editor (VS Code recommended)
-
-## Installation
-
-### Step 1: Create a Virtual Environment
-
-\`\`\`bash
-# Create a new project directory
-mkdir ai-agent-project
-cd ai-agent-project
-
-# Create virtual environment
-python -m venv venv
-
-# Activate it
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows:
-venv\\Scripts\\activate
-\`\`\`
-
-### Step 2: Install LangChain
-
-\`\`\`bash
-pip install langchain langchain-openai langchain-community
-pip install python-dotenv
-\`\`\`
-
-### Step 3: Configure API Keys
-
-Create a \`.env\` file in your project root:
-
-\`\`\`
-OPENAI_API_KEY=sk-your-key-here
-ANTHROPIC_API_KEY=sk-ant-your-key-here
-\`\`\`
-
-### Step 4: Verify Installation
+Each node receives the current state and returns state updates:
 
 \`\`\`python
-from langchain_openai import ChatOpenAI
-from dotenv import load_dotenv
+def classify_input(state: AgentState) -> dict:
+    """Classify the user's request type."""
+    # ... classification logic
+    return {"current_step": "classified"}
 
-load_dotenv()
+def process_request(state: AgentState) -> dict:
+    """Process based on classification."""
+    # ... processing logic
+    return {"result": "processed"}
 
-llm = ChatOpenAI(model="gpt-4o-mini")
-response = llm.invoke("Hello! Are you working?")
-print(response.content)
+graph.add_node("classify", classify_input)
+graph.add_node("process", process_request)
 \`\`\`
 
-## Project Structure
+### 3. Edges
 
-\`\`\`
-ai-agent-project/
-  venv/
-  .env
-  agents/
-    __init__.py
-    research_agent.py
-  tools/
-    __init__.py
-    web_search.py
-  main.py
-  requirements.txt
+\`\`\`python
+# Sequential: classify → process → END
+graph.add_edge(START, "classify")
+graph.add_edge("classify", "process")
+graph.add_edge("process", END)
 \`\`\`
 
-You're now ready to start building AI agents!
+### 4. Conditional Edges
+
+\`\`\`python
+def route_by_type(state: AgentState) -> str:
+    if state["current_step"] == "simple":
+        return "quick_answer"
+    return "deep_analysis"
+
+graph.add_conditional_edges("classify", route_by_type)
+\`\`\`
+
+### 5. Compile and Run
+
+\`\`\`python
+app = graph.compile()
+result = app.invoke({"messages": ["Hello"], "current_step": "", "result": ""})
+\`\`\`
+
+> **Key Insight**: LangGraph gives you explicit control over agent flow — unlike simple agent loops, you can define exactly how decisions branch, loop, and converge.
 `,
 
-  l30: `# Common Prompt Patterns
+  // A1.1 — Architectural Patterns for Agentic Systems
+  l1275: `# Architectural Patterns — Microservices vs Monolith for Agents
 
-## The CRISP Framework
+## Choosing the Right Architecture
 
-A structured approach to crafting effective prompts:
+When deploying AI agents to production, one of the first decisions is how to structure your services.
 
-- **C**ontext: Set the scene and provide background
-- **R**ole: Define who the AI should act as
-- **I**nstruction: State what you want clearly
-- **S**pecifics: Add constraints, format, and details
-- **P**urpose: Explain the end goal
+## Monolithic Agent Architecture
 
-## Pattern 1: Role-Based Prompting
+All agent logic runs in a single service:
 
 \`\`\`
-You are an experienced data scientist specializing in
-natural language processing. Explain the concept of
-word embeddings to a junior developer who knows Python
-but has no ML background.
+┌──────────────────────────────┐
+│        Agent Service         │
+│  ┌──────┐ ┌──────┐ ┌──────┐ │
+│  │ LLM  │ │Tools │ │Memory│ │
+│  │Client│ │      │ │Store │ │
+│  └──────┘ └──────┘ └──────┘ │
+│  ┌──────┐ ┌──────────────┐  │
+│  │ RAG  │ │ Orchestrator │  │
+│  └──────┘ └──────────────┘  │
+└──────────────────────────────┘
 \`\`\`
 
-## Pattern 2: Few-Shot Examples
+**Pros**: Simple to develop, easy to debug, no network overhead
+**Cons**: Hard to scale individual components, single point of failure
+
+## Microservices Agent Architecture
+
+Each capability runs as an independent service:
 
 \`\`\`
-Convert the following product descriptions to bullet points:
-
-Input: "The XR-500 headphones feature active noise cancellation,
-40-hour battery life, and premium memory foam ear cushions."
-Output:
-- Active noise cancellation
-- 40-hour battery life
-- Premium memory foam ear cushions
-
-Input: "Our organic green tea is sourced from Japanese highlands,
-contains natural antioxidants, and comes in biodegradable packaging."
-Output:
+┌────────────┐
+│ API Gateway│
+└─────┬──────┘
+      │
+┌─────┴──────────────────────────────┐
+│  ┌──────────┐  ┌──────────┐       │
+│  │Orchestrator│  │  RAG     │       │
+│  │  Service  │  │ Service  │       │
+│  └─────┬─────┘  └──────────┘       │
+│        │                            │
+│  ┌─────┴─────┐  ┌──────────┐       │
+│  │Tool Service│  │ Memory   │       │
+│  │           │  │ Service  │       │
+│  └───────────┘  └──────────┘       │
+└────────────────────────────────────┘
 \`\`\`
 
-## Pattern 3: Step-by-Step Instructions
+**Pros**: Independent scaling, team autonomy, fault isolation
+**Cons**: Network latency, complex debugging, operational overhead
 
-\`\`\`
-Analyze the following code for security vulnerabilities.
+## When to Use What
 
-Follow these steps:
-1. Identify each potential vulnerability
-2. Classify its severity (High/Medium/Low)
-3. Explain why it's a vulnerability
-4. Provide the fixed code
+| Factor | Monolith | Microservices |
+|--------|----------|---------------|
+| **Team size** | Small (1-3 devs) | Large (5+ devs) |
+| **Scale** | < 100 concurrent users | 100+ concurrent users |
+| **Complexity** | Single agent type | Multiple agent types |
+| **Development stage** | MVP / prototype | Production at scale |
 
-Code:
-[paste code here]
-\`\`\`
-
-## Pattern 4: Output Formatting
-
-\`\`\`
-Respond in the following JSON format:
-{
-  "summary": "brief overview",
-  "key_points": ["point1", "point2"],
-  "sentiment": "positive|negative|neutral",
-  "confidence": 0.0-1.0
-}
-\`\`\`
-`,
-
-  l52: `# ROI Framework for AI Automation
-
-## Calculating Return on Investment for AI Projects
-
-### The AI ROI Formula
-
-\`\`\`
-ROI = (Value Generated - Total Cost) / Total Cost x 100%
-\`\`\`
-
-### Value Generated Components
-
-| Component | How to Measure |
-|-----------|---------------|
-| **Time Saved** | Hours saved per week x hourly cost |
-| **Error Reduction** | Cost of errors before vs. after |
-| **Throughput Increase** | Additional output capacity |
-| **Customer Satisfaction** | NPS improvement, retention rate |
-
-### Total Cost Components
-
-| Component | Typical Range |
-|-----------|--------------|
-| **AI API Costs** | $50 - $500/month |
-| **Development Time** | 2 - 8 weeks |
-| **Integration Costs** | $5K - $50K |
-| **Maintenance** | 10-20% of initial cost/year |
-
-## Case Study: Customer Support Automation
-
-### Before AI Agent
-- 5 support agents handling 200 tickets/day
-- Average resolution time: 45 minutes
-- Monthly cost: $25,000
-
-### After AI Agent
-- AI handles 60% of tickets automatically
-- 2 support agents for complex issues
-- Average resolution time: 5 minutes (AI) / 30 minutes (human)
-- Monthly cost: $10,500 (staff) + $500 (AI) = $11,000
-
-### ROI Calculation
-\`\`\`
-Monthly Savings = $25,000 - $11,000 = $14,000
-Implementation Cost = $30,000 (one-time)
-Payback Period = $30,000 / $14,000 = 2.1 months
-Annual ROI = ($14,000 x 12 - $30,000) / $30,000 x 100% = 460%
-\`\`\`
-
-## Decision Framework
-
-Use this decision matrix to prioritize AI automation projects:
-
-1. **High Impact, Low Complexity** - Do first
-2. **High Impact, High Complexity** - Plan carefully
-3. **Low Impact, Low Complexity** - Quick wins
-4. **Low Impact, High Complexity** - Avoid
-`,
-
-  l62: `# AI Use Cases by Industry
-
-## Healthcare
-
-- **Medical Image Analysis**: AI-powered radiology and pathology
-- **Drug Discovery**: Accelerating compound screening
-- **Clinical Documentation**: Automated note-taking and coding
-- **Patient Triage**: AI chatbots for initial assessment
-
-## Financial Services
-
-- **Fraud Detection**: Real-time transaction monitoring
-- **Risk Assessment**: Automated credit scoring
-- **Document Processing**: Insurance claims and loan applications
-- **Customer Service**: AI-powered financial advisors
-
-## Retail & E-Commerce
-
-- **Personalization**: Product recommendations at scale
-- **Inventory Management**: Demand forecasting
-- **Customer Support**: Automated order tracking and returns
-- **Content Generation**: Product descriptions and marketing copy
-
-## Manufacturing
-
-- **Quality Control**: Visual inspection with computer vision
-- **Predictive Maintenance**: Reducing unplanned downtime
-- **Supply Chain Optimization**: Demand planning and logistics
-- **Process Automation**: Robotic process automation with AI
-
-## Education
-
-- **Personalized Learning**: Adaptive learning paths
-- **Content Creation**: Automated quiz and exercise generation
-- **Student Support**: AI tutoring and Q&A systems
-- **Administrative Automation**: Grading and scheduling
-
-## Key Takeaway
-
-Every industry has AI opportunities. The key is identifying which use cases deliver the highest ROI for your specific organization and starting with those.
+> **Recommendation**: Start monolithic, evolve to microservices when scaling demands it.
 `,
 };
 

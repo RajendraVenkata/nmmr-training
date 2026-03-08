@@ -118,7 +118,7 @@ export function EnrollButton({ courseId, courseSlug, price }: EnrollButtonProps)
             : "Sign in to Enroll"}
       </Button>
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400 text-center">
+        <p className="text-sm text-red-600 text-center">
           {error}
         </p>
       )}

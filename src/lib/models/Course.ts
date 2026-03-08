@@ -30,6 +30,8 @@ export interface ICourse extends Document {
   duration: string;
   status: "draft" | "published" | "archived";
   instructor: string;
+  order: number;
+  courseNumber: string;
   tags: string[];
   prerequisites: string[];
   modules: IModule[];
@@ -92,6 +94,8 @@ const CourseSchema = new Schema<ICourse>(
       default: "draft",
     },
     instructor: { type: String, default: "" },
+    order: { type: Number, default: 0 },
+    courseNumber: { type: String, default: "" },
     tags: [{ type: String }],
     prerequisites: [{ type: String }],
     modules: [ModuleSchema],

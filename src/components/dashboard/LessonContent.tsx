@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Terminal,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -18,10 +19,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { QuizPlayer } from "./QuizPlayer";
 import { ImageLesson } from "./ImageLesson";
+import { TerminalBlock } from "@/components/terminal/TerminalBlock";
 import type { LessonType, QuizData } from "@/types";
 
 interface LessonContentProps {
   courseSlug: string;
+  courseId: string;
   lesson: {
     id: string;
     title: string;
@@ -30,6 +33,7 @@ interface LessonContentProps {
     hasContent?: boolean;
   };
   enrollmentId: string;
+  token: string;
   isCompleted: boolean;
   onMarkComplete: () => void;
   onNext: (() => void) | null;
@@ -67,9 +71,9 @@ function ContentPlaceholder({ type }: { type: LessonType }) {
   );
 }
 
-function MarkdownContent({ content }: { content: string }) {
+function MarkdownSection({ content }: { content: string }) {
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none">
+    <div className="prose prose-sm max-w-none">
       <ReactMarkdown
         components={{
           code({ className, children, ...props }) {
@@ -106,10 +110,104 @@ function MarkdownContent({ content }: { content: string }) {
   );
 }
 
+/**
+ * Parses :::terminal labId [duration]::: blocks from markdown content.
+ * Returns the cleaned markdown (without terminal markers) and terminal definitions.
+ */
+function parseTerminalBlocks(content: string) {
+  const terminalRegex = /:::terminal\s+([\w-]+)(?:\s+(\d+))?\s*:::/g;
+  const terminals: Array<{ labId: string; duration?: number }> = [];
+
+  // Extract terminal definitions
+  let match;
+  while ((match = terminalRegex.exec(content)) !== null) {
+    terminals.push({
+      labId: match[1],
+      duration: match[2] ? parseInt(match[2], 10) : undefined,
+    });
+  }
+
+  // Strip terminal markers from markdown
+  const cleanedMarkdown = content.replace(terminalRegex, "").trim();
+
+  return { cleanedMarkdown, terminals };
+}
+
+/**
+ * Renders markdown content with terminals at the bottom.
+ * Terminal blocks are extracted from the content and rendered after all markdown.
+ * A floating button allows opening the terminal as a popup overlay.
+ */
+function MarkdownContent({
+  content,
+  courseId,
+  token,
+}: {
+  content: string;
+  courseId: string;
+  token: string;
+}) {
+  const [popupTerminal, setPopupTerminal] = useState<{
+    labId: string;
+    duration?: number;
+  } | null>(null);
+
+  const { cleanedMarkdown, terminals } = parseTerminalBlocks(content);
+
+  // No terminal blocks — just render markdown
+  if (terminals.length === 0) {
+    return <MarkdownSection content={cleanedMarkdown} />;
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Markdown content */}
+      <MarkdownSection content={cleanedMarkdown} />
+
+      {/* Terminal(s) fixed at the bottom */}
+      <div className="space-y-4 pt-4 border-t border-[#313244]">
+        {terminals.map((term, index) => (
+          <TerminalBlock
+            key={`terminal-${index}`}
+            labId={term.labId}
+            courseId={courseId}
+            token={token}
+            duration={term.duration}
+            mode="bottom"
+          />
+        ))}
+      </div>
+
+      {/* Floating popup button */}
+      <button
+        onClick={() => setPopupTerminal(terminals[0])}
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#94e2d5] hover:bg-[#a6e3a1] text-[#1e1e2e] font-medium text-sm shadow-lg transition-colors"
+      >
+        <Terminal className="h-4 w-4" />
+        Terminal
+      </button>
+
+      {/* Popup terminal overlay */}
+      {popupTerminal && (
+        <TerminalBlock
+          labId={popupTerminal.labId}
+          courseId={courseId}
+          token={token}
+          duration={popupTerminal.duration}
+          mode="popup"
+          onClose={() => setPopupTerminal(null)}
+        />
+      )}
+    </div>
+  );
+}
+
 export function LessonContent({
   courseSlug,
+  courseId,
   lesson,
   enrollmentId,
+  token,
   isCompleted,
   onMarkComplete,
   onNext,
@@ -192,7 +290,11 @@ export function LessonContent({
         <>
           {(content.type === "markdown" || content.type === "document") &&
             content.markdownContent && (
-              <MarkdownContent content={content.markdownContent} />
+              <MarkdownContent
+                content={content.markdownContent}
+                courseId={courseId}
+                token={token}
+              />
             )}
 
           {content.type === "quiz" && content.quizData && (
@@ -217,7 +319,7 @@ export function LessonContent({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t">
         <div>
           {isCompleted ? (
-            <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 gap-1">
+            <Badge className="bg-green-500/10 text-green-600 gap-1">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Completed
             </Badge>

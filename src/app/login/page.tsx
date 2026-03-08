@@ -25,8 +25,8 @@ export default function LoginPage() {
     <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10">
-            <GraduationCap className="h-6 w-6 text-accent" />
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/5">
+            <GraduationCap className="h-6 w-6 text-primary" />
           </div>
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
           <CardDescription>

@@ -56,11 +56,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers,
   callbacks: {
     async signIn({ user, account }) {
+      const adminOnly = process.env.ENABLE_ADMIN_ONLY === "true";
+
       if (account?.provider === "google") {
         await connectDB();
         const existingUser = await User.findOne({ email: user.email });
 
         if (!existingUser) {
+          // Block new Google sign-ups when admin-only mode is enabled
+          if (adminOnly) return false;
+
           const newUser = await User.create({
             name: user.name,
             email: user.email,
@@ -70,6 +75,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           });
           user.id = newUser._id.toString();
         } else {
+          // Block non-admin Google users when admin-only mode is enabled
+          if (adminOnly && existingUser.role !== "admin") return false;
+
           user.id = existingUser._id.toString();
           if (!existingUser.image && user.image) {
             existingUser.image = user.image;
@@ -77,6 +85,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
         }
       }
+
+      // Block non-admin credential users when admin-only mode is enabled
+      if (account?.provider === "credentials" && adminOnly) {
+        const userRole = (user as { role?: string }).role;
+        if (userRole !== "admin") return false;
+      }
+
       return true;
     },
     async jwt({ token, user }) {

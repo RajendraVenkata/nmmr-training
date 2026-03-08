@@ -33,28 +33,34 @@ export function MobileMenu() {
       <SheetContent side="right" className="w-[300px] sm:w-[350px]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-accent" />
+            <GraduationCap className="h-6 w-6 text-primary" />
             {COMPANY.name}
           </SheetTitle>
         </SheetHeader>
 
         <nav className="mt-8 flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className={cn(
-                "px-3 py-3 text-sm font-medium rounded-md transition-colors",
-                "hover:bg-muted",
-                pathname === item.href
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground"
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "px-3 py-3 text-sm font-medium rounded-md transition-colors",
+                  "hover:bg-muted",
+                  isActive
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-muted-foreground"
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <Separator className="my-6" />
@@ -99,7 +105,7 @@ export function MobileMenu() {
                 setOpen(false);
                 signOut({ callbackUrl: "/" });
               }}
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-muted"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-muted"
             >
               <LogOut className="h-4 w-4" />
               Sign Out

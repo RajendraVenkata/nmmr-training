@@ -28,7 +28,7 @@ export default function PrivacyPolicyPage() {
         Last updated: March 1, 2026
       </p>
 
-      <div className="prose prose-neutral dark:prose-invert max-w-none space-y-8">
+      <div className="prose prose-neutral max-w-none space-y-8">
         <section>
           <h2 className="text-xl font-semibold mb-3">1. Information We Collect</h2>
           <p className="text-muted-foreground leading-relaxed">
@@ -101,7 +101,7 @@ export default function PrivacyPolicyPage() {
             information by contacting us at{" "}
             <a
               href={`mailto:${COMPANY.email}`}
-              className="text-accent hover:underline"
+              className="text-primary hover:underline"
             >
               {COMPANY.email}
             </a>
@@ -116,12 +116,12 @@ export default function PrivacyPolicyPage() {
             us at{" "}
             <a
               href={`mailto:${COMPANY.email}`}
-              className="text-accent hover:underline"
+              className="text-primary hover:underline"
             >
               {COMPANY.email}
             </a>{" "}
             or visit our{" "}
-            <Link href="/contact" className="text-accent hover:underline">
+            <Link href="/contact" className="text-primary hover:underline">
               Contact page
             </Link>
             .

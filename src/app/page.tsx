@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { COMPANY, SITE } from "@/lib/constants";
+import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = createMetadata({
   title: SITE.title,
@@ -88,63 +89,72 @@ const VALUE_PROPS = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
   return (
     <>
       {/* Hero Section */}
-      <section className="relative overflow-hidden border-b bg-gradient-to-b from-background to-muted/50">
-        <div className="container mx-auto px-4 py-20 sm:py-28">
+      <section className="relative overflow-hidden">
+        <div className="container mx-auto px-4 py-24 sm:py-32">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge variant="secondary" className="mb-4">
+            <Badge variant="outline" className="mb-6">
               Powered by {COMPANY.name}
             </Badge>
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               {COMPANY.tagline}
             </h1>
             <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
               {COMPANY.description}
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Button size="lg" asChild>
                 <Link href="/courses">
                   Browse Courses
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/register">Create Free Account</Link>
-              </Button>
+              {session ? (
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/dashboard">Go to Dashboard</Link>
+                </Button>
+              ) : (
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/register">Create Free Account</Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </section>
 
       {/* Course Categories */}
-      <section className="container mx-auto px-4 py-20">
-        <SectionHeading
-          title="What You'll Learn"
-          subtitle="Explore our training tracks covering the most in-demand AI skills."
-        />
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURED_CATEGORIES.map((category) => (
-            <Link key={category.title} href={category.href}>
-              <Card className="h-full transition-colors hover:border-accent/50 hover:shadow-md">
-                <CardHeader>
-                  <category.icon className="h-10 w-10 text-accent mb-2" />
-                  <CardTitle className="text-lg">{category.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>{category.description}</CardDescription>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+      <section className="bg-muted/50">
+        <div className="container mx-auto px-4 py-24">
+          <SectionHeading
+            title="What You'll Learn"
+            subtitle="Explore our training tracks covering the most in-demand AI skills."
+          />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURED_CATEGORIES.map((category) => (
+              <Link key={category.title} href={category.href}>
+                <Card className="h-full transition-all hover:border-primary/30 hover:shadow-sm">
+                  <CardHeader>
+                    <category.icon className="h-10 w-10 text-primary mb-2" />
+                    <CardTitle className="text-lg">{category.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription>{category.description}</CardDescription>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Value Props */}
-      <section className="border-t bg-muted/30">
-        <div className="container mx-auto px-4 py-20">
+      <section>
+        <div className="container mx-auto px-4 py-24">
           <SectionHeading
             title="Why Learn With Us"
             subtitle="We combine deep AI expertise with practical, project-based learning."
@@ -152,10 +162,10 @@ export default function Home() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {VALUE_PROPS.map((prop) => (
               <div key={prop.title} className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10">
-                  <prop.icon className="h-6 w-6 text-accent" />
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/5">
+                  <prop.icon className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-base font-semibold">{prop.title}</h3>
+                <h3 className="text-base font-semibold text-foreground">{prop.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {prop.description}
                 </p>
@@ -166,23 +176,32 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="border-t">
-        <div className="container mx-auto px-4 py-20">
+      <section className="bg-muted/50">
+        <div className="container mx-auto px-4 py-24">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               Ready to Start Learning?
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
+            <p className="mt-4 text-base text-muted-foreground">
               Join our platform and gain the AI skills that companies are hiring
               for. Start with a free account today.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Button size="lg" asChild>
-                <Link href="/register">
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              {session ? (
+                <Button size="lg" asChild>
+                  <Link href="/dashboard">
+                    Go to Dashboard
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button size="lg" asChild>
+                  <Link href="/register">
+                    Get Started Free
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              )}
               <Button size="lg" variant="outline" asChild>
                 <Link href="/contact">Contact Us</Link>
               </Button>

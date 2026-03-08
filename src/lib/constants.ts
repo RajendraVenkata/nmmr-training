@@ -6,10 +6,11 @@ import type { NavItem } from "@/types";
 
 export const COMPANY = {
   name: "NMMR Technologies",
+  shortName: "NMMR Training",
   legalName: "NMMR Technologies Private Limited",
   tagline: "Master AI Skills That Matter",
   description:
-    "A modern training platform for Generative AI and Agentic AI. Learn from industry experts with hands-on projects and real-world use cases.",
+    "A hands-on training platform for Agentic AI — build AI agents from zero to production with Docker-based labs, LangChain, LangGraph, RAG, and cloud deployment.",
   email: "training@nmmr.tech",
   phone: "+91 9876543210",
   address: "Hyderabad, Telangana, India",
@@ -27,9 +28,9 @@ export const COMPANY = {
 export const SITE = {
   name: "NMMR Training",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://training.nmmr.tech",
-  title: "NMMR Training - AI & GenAI Courses",
+  title: "NMMR Training - Agentic AI Courses",
   description:
-    "Learn Generative AI, Agentic AI, Prompt Engineering, and more with hands-on courses from NMMR Technologies.",
+    "Build Agentic AI Applications from Zero to Production — hands-on courses with Docker-based labs covering AI agents, RAG, LangChain, and cloud deployment.",
   ogImage: "/images/og-image.webp",
 } as const;
 
@@ -54,6 +55,7 @@ export const DASHBOARD_NAV: NavItem[] = [
 export const ADMIN_NAV: NavItem[] = [
   { label: "Dashboard", href: "/admin" },
   { label: "Courses", href: "/admin/courses" },
+  { label: "Labs", href: "/admin/labs" },
   { label: "Users", href: "/admin/users" },
 ];
 
@@ -62,12 +64,12 @@ export const ADMIN_NAV: NavItem[] = [
 // ============================================================
 
 export const COURSE_CATEGORIES = [
-  "GenAI",
-  "Agentic AI",
+  "AI Foundations",
+  "LLM Providers",
   "Prompt Engineering",
-  "AI Development",
-  "AI Consulting",
-  "Machine Learning",
+  "Agentic AI",
+  "RAG & Retrieval",
+  "Cloud & Production",
 ] as const;
 
 export const COURSE_DIFFICULTIES = [
@@ -115,8 +117,8 @@ export const FOOTER_LINKS = {
   ],
   resources: [
     { label: "Getting Started", href: "/courses?difficulty=beginner" },
-    { label: "GenAI Courses", href: "/courses?category=GenAI" },
     { label: "Agentic AI Courses", href: "/courses?category=Agentic+AI" },
+    { label: "Cloud & Production", href: "/courses?category=Cloud+%26+Production" },
   ],
   legal: [
     { label: "Privacy Policy", href: "/privacy-policy" },

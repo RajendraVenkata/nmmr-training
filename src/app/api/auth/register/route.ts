@@ -8,6 +8,13 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
+    if (process.env.ENABLE_ADMIN_ONLY === "true") {
+      return NextResponse.json(
+        { error: "Registration is currently disabled" },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
     const result = registerSchema.safeParse(body);

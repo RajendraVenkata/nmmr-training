@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Menu } from "lucide-react";
+import { ArrowLeft, Menu, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -18,9 +19,11 @@ export default function CoursePlayerPage() {
   const params = useParams();
   const slug = params.slug as string;
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [enrollment, setEnrollment] = useState<EnrollmentWithCourse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [terminalToken, setTerminalToken] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -39,6 +42,17 @@ export default function CoursePlayerPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [slug]);
+
+  // Fetch a short-lived terminal token for WebSocket auth
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_TERMINAL_ENABLED !== "true") return;
+    fetch("/api/terminal/token", { method: "POST" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.token) setTerminalToken(data.token);
+      })
+      .catch(() => {});
+  }, []);
 
   const allLessons = useMemo(() => {
     if (!course) return [];
@@ -194,19 +208,36 @@ export default function CoursePlayerPage() {
 
       {/* Main content */}
       <div className="flex-1 overflow-auto p-6 lg:p-8">
-        <Link
-          href="/dashboard/courses"
-          className="hidden lg:inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to My Courses
-        </Link>
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            href="/dashboard/courses"
+            className="hidden lg:inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to My Courses
+          </Link>
+
+          {/* Right sidebar toggle (desktop only) */}
+          <button
+            onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
+            className="hidden lg:flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            title={rightSidebarCollapsed ? "Show course outline" : "Hide course outline"}
+          >
+            {rightSidebarCollapsed ? (
+              <PanelRightOpen className="h-4 w-4" />
+            ) : (
+              <PanelRightClose className="h-4 w-4" />
+            )}
+          </button>
+        </div>
 
         {currentLesson && (
           <LessonContent
             courseSlug={slug}
+            courseId={course.id}
             lesson={currentLesson}
             enrollmentId={enrollment.id}
+            token={terminalToken}
             isCompleted={completedLessons.has(currentLessonId)}
             onMarkComplete={handleMarkComplete}
             onNext={handleNext}
@@ -216,7 +247,12 @@ export default function CoursePlayerPage() {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:block w-80 border-l overflow-auto bg-muted/20">
+      <div
+        className={cn(
+          "hidden lg:block border-l overflow-auto bg-muted/20 transition-all duration-200",
+          rightSidebarCollapsed ? "w-0 border-l-0 overflow-hidden" : "w-80"
+        )}
+      >
         <CoursePlayerSidebar
           course={course}
           currentLessonId={currentLessonId}

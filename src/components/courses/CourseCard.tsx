@@ -22,12 +22,13 @@ interface CourseCardProps {
   instructor: string;
   lessonsCount: number;
   isEnrolled?: boolean;
+  courseNumber?: string;
 }
 
 const difficultyColors: Record<string, string> = {
-  beginner: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  intermediate: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-  advanced: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  beginner: "bg-green-100 text-green-800",
+  intermediate: "bg-amber-100 text-amber-800",
+  advanced: "bg-red-100 text-red-800",
 };
 
 export function CourseCard({
@@ -42,15 +43,23 @@ export function CourseCard({
   instructor,
   lessonsCount,
   isEnrolled,
+  courseNumber,
 }: CourseCardProps) {
   return (
     <Link href={isEnrolled ? `/dashboard/courses/${slug}` : `/courses/${slug}`}>
-      <Card className="h-full transition-all hover:shadow-lg hover:border-accent/50">
+      <Card className="h-full transition-all hover:shadow-lg hover:border-primary/30">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <Badge variant="secondary" className="text-xs">
-              {category}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {courseNumber && (
+                <span className="text-xs font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                  {courseNumber}
+                </span>
+              )}
+              <Badge variant="secondary" className="text-xs">
+                {category}
+              </Badge>
+            </div>
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${difficultyColors[difficulty] || ""}`}>
               {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
             </span>
@@ -74,20 +83,31 @@ export function CourseCard({
               {lessonsCount} lessons
             </span>
           </div>
-          <div className="flex items-center justify-between">
-            {isEnrolled ? (
-              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-600 dark:text-green-400">
-                <CheckCircle2 className="h-4 w-4" />
-                Enrolled
-              </span>
-            ) : (
-              <span className="text-lg font-bold">
-                {price === 0 ? (
-                  <span className="text-green-600 dark:text-green-400">Free</span>
-                ) : (
-                  formatPrice(price, currency)
-                )}
-              </span>
+          <div>
+            <div className="flex items-center justify-between">
+              {isEnrolled ? (
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-600">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Enrolled
+                </span>
+              ) : (
+                <span className="text-lg font-bold">
+                  {price === 0 ? (
+                    <span className="text-green-600">Free</span>
+                  ) : (
+                    formatPrice(price, currency)
+                  )}
+                </span>
+              )}
+            </div>
+            {!isEnrolled && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {difficulty === "beginner"
+                  ? "All 10 beginner courses"
+                  : difficulty === "intermediate"
+                    ? "All 10 intermediate courses"
+                    : "All 13 advanced courses"}
+              </p>
             )}
           </div>
         </CardContent>

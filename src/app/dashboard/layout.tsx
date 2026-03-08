@@ -19,11 +19,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <AuthGuard>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        <Sidebar type="dashboard" />
+        <Sidebar
+          type="dashboard"
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
 
         <div className="lg:hidden fixed bottom-4 left-4 z-40">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>

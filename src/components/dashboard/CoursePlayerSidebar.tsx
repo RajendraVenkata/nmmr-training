@@ -89,7 +89,7 @@ export function CoursePlayerSidebar({
                       onClick={() => onSelectLesson(lesson.id)}
                       className={cn(
                         "w-full flex items-start gap-2.5 px-4 py-2.5 text-left text-sm transition-colors hover:bg-muted/50 border-b border-border/50",
-                        isActive && "bg-accent/10 border-l-2 border-l-accent"
+                        isActive && "bg-primary/5 border-l-2 border-l-primary"
                       )}
                     >
                       <span className="mt-0.5 shrink-0">

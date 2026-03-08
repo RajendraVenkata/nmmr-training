@@ -28,7 +28,7 @@ export function EnrolledCourseCard({ enrollment }: EnrolledCourseCardProps) {
             {enrollment.courseCategory}
           </Badge>
           {isCompleted && (
-            <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 text-xs">
+            <Badge className="bg-green-500/10 text-green-600 text-xs">
               Completed
             </Badge>
           )}
