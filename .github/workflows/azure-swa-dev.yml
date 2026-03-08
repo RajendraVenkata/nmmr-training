@@ -3,7 +3,7 @@ name: Deploy to Dev
 on:
   push:
     branches:
-      - develop
+      #- develop
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
