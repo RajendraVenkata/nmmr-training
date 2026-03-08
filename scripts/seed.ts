@@ -69,6 +69,8 @@ const CourseSchema = new mongoose.Schema(
       default: "draft",
     },
     instructor: { type: String, default: "" },
+    order: { type: Number, default: 0 },
+    courseNumber: { type: String, default: "" },
     modules: [ModuleSchema],
   },
   { timestamps: true }

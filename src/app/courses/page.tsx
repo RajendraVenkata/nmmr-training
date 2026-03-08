@@ -125,6 +125,7 @@ export default function CoursesPage() {
                 instructor={course.instructor}
                 lessonsCount={course.lessonsCount}
                 isEnrolled={enrolledCourseIds.has(course.id)}
+                courseNumber={course.courseNumber}
               />
             ))}
           </div>

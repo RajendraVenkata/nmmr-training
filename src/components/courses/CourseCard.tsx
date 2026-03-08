@@ -22,6 +22,7 @@ interface CourseCardProps {
   instructor: string;
   lessonsCount: number;
   isEnrolled?: boolean;
+  courseNumber?: string;
 }
 
 const difficultyColors: Record<string, string> = {
@@ -42,15 +43,23 @@ export function CourseCard({
   instructor,
   lessonsCount,
   isEnrolled,
+  courseNumber,
 }: CourseCardProps) {
   return (
     <Link href={isEnrolled ? `/dashboard/courses/${slug}` : `/courses/${slug}`}>
       <Card className="h-full transition-all hover:shadow-lg hover:border-primary/30">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <Badge variant="secondary" className="text-xs">
-              {category}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {courseNumber && (
+                <span className="text-xs font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                  {courseNumber}
+                </span>
+              )}
+              <Badge variant="secondary" className="text-xs">
+                {category}
+              </Badge>
+            </div>
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${difficultyColors[difficulty] || ""}`}>
               {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
             </span>

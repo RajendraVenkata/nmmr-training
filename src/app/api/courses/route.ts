@@ -33,6 +33,8 @@ function sampleToPublic(courses: SampleCourse[], query: string, category: string
     duration: c.duration,
     instructor: c.instructor,
     lessonsCount: c.modules.reduce((acc, m) => acc + m.lessons.length, 0),
+    order: c.order,
+    courseNumber: c.courseNumber,
   }));
 }
 
@@ -70,7 +72,9 @@ export async function GET(request: Request) {
       filter.difficulty = difficulty;
     }
 
-    const courses = await Course.find(filter).sort({ _id: -1 }).lean();
+    const courses = await Course.find(filter).lean();
+    // Sort by order field client-side (Cosmos DB requires composite index for server-side sort)
+    courses.sort((a, b) => (a.order || 0) - (b.order || 0));
 
     // If DB is connected but empty, fall back to sample data
     if (courses.length === 0) {
@@ -100,6 +104,8 @@ export async function GET(request: Request) {
               acc + (m.lessons?.length || 0),
             0
           ) || 0,
+        order: c.order,
+        courseNumber: c.courseNumber,
       };
     });
 

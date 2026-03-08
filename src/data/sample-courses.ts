@@ -14,6 +14,8 @@ export interface SampleCourse {
   duration: string;
   status: "draft" | "published" | "archived";
   instructor: string;
+  order: number;
+  courseNumber: string;
   modules: {
     id: string;
     title: string;
@@ -44,6 +46,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "24 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 1,
+    courseNumber: "B1",
     modules: [
       {
         id: "m1",
@@ -211,6 +215,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "19 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 2,
+    courseNumber: "B2",
     modules: [
       {
         id: "m9",
@@ -340,6 +346,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "58 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 3,
+    courseNumber: "B3",
     modules: [
       {
         id: "m14",
@@ -664,6 +672,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "15 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 4,
+    courseNumber: "B4",
     modules: [
       {
         id: "m25",
@@ -781,6 +791,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "11 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 5,
+    courseNumber: "B5",
     modules: [
       {
         id: "m31",
@@ -884,6 +896,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "13 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 6,
+    courseNumber: "B6",
     modules: [
       {
         id: "m37",
@@ -1001,6 +1015,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "13 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 7,
+    courseNumber: "B7",
     modules: [
       {
         id: "m44",
@@ -1117,6 +1133,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "15 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 8,
+    courseNumber: "B8",
     modules: [
       {
         id: "m51",
@@ -1242,6 +1260,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "10 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 9,
+    courseNumber: "B9",
     modules: [
       {
         id: "m58",
@@ -1341,6 +1361,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "4 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 10,
+    courseNumber: "B10",
     modules: [
       {
         id: "m64",
@@ -1380,6 +1402,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "11 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 11,
+    courseNumber: "I1",
     modules: [
       {
         id: "m65",
@@ -1483,6 +1507,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "12 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 12,
+    courseNumber: "I2",
     modules: [
       {
         id: "m71",
@@ -1597,6 +1623,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "10 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 13,
+    courseNumber: "I3",
     modules: [
       {
         id: "m78",
@@ -1697,6 +1725,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "14 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 14,
+    courseNumber: "I4",
     modules: [
       {
         id: "m84",
@@ -1817,6 +1847,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "11 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 15,
+    courseNumber: "I5",
     modules: [
       {
         id: "m91",
@@ -1918,6 +1950,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "12 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 16,
+    courseNumber: "I6",
     modules: [
       {
         id: "m97",
@@ -2024,6 +2058,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "12 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 17,
+    courseNumber: "I7",
     modules: [
       {
         id: "m103",
@@ -2132,6 +2168,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "15 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 18,
+    courseNumber: "I8",
     modules: [
       {
         id: "m109",
@@ -2256,6 +2294,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "14 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 19,
+    courseNumber: "I9",
     modules: [
       {
         id: "m116",
@@ -2378,6 +2418,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "5 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 20,
+    courseNumber: "I10",
     modules: [
       {
         id: "m123",
@@ -2423,6 +2465,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "13 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 21,
+    courseNumber: "A1",
     modules: [
       {
         id: "m124",
@@ -2542,6 +2586,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "14 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 22,
+    courseNumber: "A2",
     modules: [
       {
         id: "m131",
@@ -2663,6 +2709,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "15 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 23,
+    courseNumber: "A3",
     modules: [
       {
         id: "m138",
@@ -2795,6 +2843,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "15 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 24,
+    courseNumber: "A4",
     modules: [
       {
         id: "m146",
@@ -2929,6 +2979,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "14 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 25,
+    courseNumber: "A5",
     modules: [
       {
         id: "m154",
@@ -3050,6 +3102,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "16 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 26,
+    courseNumber: "A6",
     modules: [
       {
         id: "m161",
@@ -3186,6 +3240,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "15 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 27,
+    courseNumber: "A7",
     modules: [
       {
         id: "m169",
@@ -3320,6 +3376,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "16 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 28,
+    courseNumber: "A8",
     modules: [
       {
         id: "m177",
@@ -3456,6 +3514,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "15 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 29,
+    courseNumber: "A9",
     modules: [
       {
         id: "m185",
@@ -3590,6 +3650,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "14 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 30,
+    courseNumber: "A10",
     modules: [
       {
         id: "m193",
@@ -3710,6 +3772,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "14 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 31,
+    courseNumber: "A11",
     modules: [
       {
         id: "m200",
@@ -3831,6 +3895,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "14 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 32,
+    courseNumber: "A12",
     modules: [
       {
         id: "m207",
@@ -3954,6 +4020,8 @@ export const sampleCourses: SampleCourse[] = [
     duration: "5 hours",
     status: "published",
     instructor: "NMMR Technologies",
+    order: 33,
+    courseNumber: "A13",
     modules: [
       {
         id: "m214",

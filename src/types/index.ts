@@ -232,6 +232,8 @@ export interface PublicCourseItem {
   duration: string;
   instructor: string;
   lessonsCount: number;
+  order?: number;
+  courseNumber?: string;
 }
 
 /** Full course detail (returned by GET /api/courses/[slug]) */
