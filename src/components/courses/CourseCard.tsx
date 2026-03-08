@@ -83,20 +83,31 @@ export function CourseCard({
               {lessonsCount} lessons
             </span>
           </div>
-          <div className="flex items-center justify-between">
-            {isEnrolled ? (
-              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-600">
-                <CheckCircle2 className="h-4 w-4" />
-                Enrolled
-              </span>
-            ) : (
-              <span className="text-lg font-bold">
-                {price === 0 ? (
-                  <span className="text-green-600">Free</span>
-                ) : (
-                  formatPrice(price, currency)
-                )}
-              </span>
+          <div>
+            <div className="flex items-center justify-between">
+              {isEnrolled ? (
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-600">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Enrolled
+                </span>
+              ) : (
+                <span className="text-lg font-bold">
+                  {price === 0 ? (
+                    <span className="text-green-600">Free</span>
+                  ) : (
+                    formatPrice(price, currency)
+                  )}
+                </span>
+              )}
+            </div>
+            {!isEnrolled && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {difficulty === "beginner"
+                  ? "All 10 beginner courses"
+                  : difficulty === "intermediate"
+                    ? "All 10 intermediate courses"
+                    : "All 13 advanced courses"}
+              </p>
             )}
           </div>
         </CardContent>

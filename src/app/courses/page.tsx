@@ -90,7 +90,7 @@ export default function CoursesPage() {
           <BookOpen className="h-6 w-6 mx-auto mb-2 text-green-600" />
           <h3 className="font-semibold text-lg">Beginner</h3>
           <p className="text-sm text-muted-foreground mb-1">10 courses · B1–B10</p>
-          <p className="text-2xl font-bold text-green-600">Free</p>
+          <p className="text-2xl font-bold">{formatPrice(2999, "INR")}</p>
         </div>
         <div className="rounded-xl border bg-amber-50 dark:bg-amber-950/30 p-5 text-center">
           <GraduationCap className="h-6 w-6 mx-auto mb-2 text-amber-600" />
