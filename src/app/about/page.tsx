@@ -59,8 +59,8 @@ export default function AboutPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="border-b bg-muted/30">
-        <div className="container mx-auto px-4 py-16 text-center">
+      <section className="bg-muted/30">
+        <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4">
             About {COMPANY.name}
           </h1>
@@ -77,8 +77,8 @@ export default function AboutPage() {
         <div className="grid gap-8 md:grid-cols-2">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 mb-4">
-                <Target className="h-5 w-5 text-accent" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/5 mb-4">
+                <Target className="h-5 w-5 text-primary" />
               </div>
               <h2 className="text-xl font-semibold mb-2">Our Mission</h2>
               <p className="text-muted-foreground">
@@ -91,8 +91,8 @@ export default function AboutPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 mb-4">
-                <Lightbulb className="h-5 w-5 text-accent" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/5 mb-4">
+                <Lightbulb className="h-5 w-5 text-primary" />
               </div>
               <h2 className="text-xl font-semibold mb-2">Our Vision</h2>
               <p className="text-muted-foreground">
@@ -107,7 +107,7 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="border-t bg-muted/30">
+      <section className="bg-muted/50">
         <div className="container mx-auto px-4 py-16">
           <SectionHeading
             title="Our Values"
@@ -116,8 +116,8 @@ export default function AboutPage() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {VALUES.map((value) => (
               <div key={value.title} className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10">
-                  <value.icon className="h-6 w-6 text-accent" />
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/5">
+                  <value.icon className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-base font-semibold mb-2">{value.title}</h3>
                 <p className="text-sm text-muted-foreground">
@@ -130,7 +130,7 @@ export default function AboutPage() {
       </section>
 
       {/* Team */}
-      <section className="border-t">
+      <section className="">
         <div className="container mx-auto px-4 py-16">
           <SectionHeading
             title="Meet Our Instructors"
@@ -144,7 +144,7 @@ export default function AboutPage() {
                     {member.initials}
                   </div>
                   <h3 className="font-semibold">{member.name}</h3>
-                  <p className="text-sm text-accent mb-3">{member.role}</p>
+                  <p className="text-sm text-primary mb-3">{member.role}</p>
                   <p className="text-sm text-muted-foreground">{member.bio}</p>
                 </CardContent>
               </Card>
@@ -154,7 +154,7 @@ export default function AboutPage() {
       </section>
 
       {/* Stats */}
-      <section className="border-t bg-muted/30">
+      <section className="bg-muted/50">
         <div className="container mx-auto px-4 py-16">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 text-center">
             {[

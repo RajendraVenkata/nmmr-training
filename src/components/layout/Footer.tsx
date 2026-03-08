@@ -5,13 +5,13 @@ import { COMPANY, FOOTER_LINKS } from "@/lib/constants";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/40">
+    <footer className="border-t border-border/40 bg-muted/30">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2">
-              <GraduationCap className="h-6 w-6 text-accent" />
+              <GraduationCap className="h-6 w-6 text-primary" />
               <span className="text-lg font-bold">{COMPANY.name}</span>
             </Link>
             <p className="mt-3 text-sm text-muted-foreground max-w-xs">

@@ -26,8 +26,8 @@ export default function ContactPage() {
 
   return (
     <div>
-      <section className="border-b bg-muted/30">
-        <div className="container mx-auto px-4 py-16 text-center">
+      <section className="bg-muted/30">
+        <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4">
             Get in Touch
           </h1>
@@ -52,8 +52,8 @@ export default function ContactPage() {
             <div className="space-y-4">
               <Card>
                 <CardContent className="flex items-start gap-4 pt-6">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10">
-                    <Mail className="h-5 w-5 text-accent" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/5">
+                    <Mail className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="font-medium text-sm">Email</h3>
@@ -66,8 +66,8 @@ export default function ContactPage() {
 
               <Card>
                 <CardContent className="flex items-start gap-4 pt-6">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10">
-                    <Phone className="h-5 w-5 text-accent" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/5">
+                    <Phone className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="font-medium text-sm">Phone</h3>
@@ -80,8 +80,8 @@ export default function ContactPage() {
 
               <Card>
                 <CardContent className="flex items-start gap-4 pt-6">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10">
-                    <MapPin className="h-5 w-5 text-accent" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/5">
+                    <MapPin className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="font-medium text-sm">Office</h3>
@@ -100,8 +100,8 @@ export default function ContactPage() {
               <CardContent className="pt-6">
                 {submitted ? (
                   <div className="text-center py-12">
-                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                      <Mail className="h-6 w-6 text-green-600 dark:text-green-400" />
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                      <Mail className="h-6 w-6 text-green-600" />
                     </div>
                     <h3 className="text-lg font-semibold mb-2">
                       Message Sent!

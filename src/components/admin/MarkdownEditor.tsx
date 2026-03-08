@@ -16,6 +16,7 @@ import {
   Link as LinkIcon,
   ImageIcon,
   Loader2,
+  Terminal,
 } from "lucide-react";
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/lib/constants";
 
@@ -208,6 +209,33 @@ export function MarkdownEditor({
                   if (file) handleImageUpload(file);
                 }}
               />
+              <div className="w-px h-6 bg-border mx-1" />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                  const labId = prompt("Enter Lab ID (e.g., python-basics):");
+                  if (labId && labId.trim()) {
+                    const durationStr = prompt(
+                      "Timer duration in minutes (leave empty for default):"
+                    );
+                    const duration = durationStr ? parseInt(durationStr, 10) : null;
+                    const durationSuffix =
+                      duration && !isNaN(duration) && duration > 0
+                        ? ` ${duration}`
+                        : "";
+                    insertAtCursor(
+                      `\n:::terminal ${labId.trim()}${durationSuffix}:::\n`,
+                      ""
+                    );
+                  }
+                }}
+                title="Insert terminal block"
+              >
+                <Terminal className="h-4 w-4" />
+              </Button>
             </div>
           )}
         </div>
@@ -228,7 +256,7 @@ export function MarkdownEditor({
         </TabsContent>
 
         <TabsContent value="preview" className="mt-2">
-          <div className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-4 min-h-[300px]">
+          <div className="prose prose-sm max-w-none border rounded-md p-4 min-h-[300px]">
             {value ? (
               <ReactMarkdown
                 components={{

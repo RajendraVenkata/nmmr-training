@@ -26,12 +26,12 @@ export type LessonType = "markdown" | "document" | "quiz" | "image";
 export type QuestionType = "multiple-choice" | "multi-select" | "true-false";
 export type ImagePurpose = "thumbnail" | "banner" | "inline" | "instructor";
 export type CourseCategory =
-  | "GenAI"
-  | "Agentic AI"
+  | "AI Foundations"
+  | "LLM Providers"
   | "Prompt Engineering"
-  | "AI Development"
-  | "AI Consulting"
-  | "Machine Learning";
+  | "Agentic AI"
+  | "RAG & Retrieval"
+  | "Cloud & Production";
 
 export interface Lesson {
   id: string;
@@ -232,6 +232,8 @@ export interface PublicCourseItem {
   duration: string;
   instructor: string;
   lessonsCount: number;
+  order?: number;
+  courseNumber?: string;
 }
 
 /** Full course detail (returned by GET /api/courses/[slug]) */
@@ -358,4 +360,62 @@ export interface CourseImageMeta {
   sizeBytes: number;
   altText: string;
   createdAt: string;
+}
+
+// ============================================================
+// Chat Widget Types
+// ============================================================
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: number;
+}
+
+export interface ChatLead {
+  name: string;
+  mobile: string;
+}
+
+// ============================================================
+// Lab Types (Terminal / Remote Command Execution)
+// ============================================================
+
+export interface LabPreloadFile {
+  path: string;
+  content: string;
+}
+
+export interface LabResources {
+  cpuLimit: number;
+  memoryLimit: string;
+  diskLimit: string;
+  timeoutMinutes: number;
+}
+
+export interface LabDefinition {
+  id: string;
+  labId: string;
+  name: string;
+  dockerImage: string;
+  description: string;
+  resources: LabResources;
+  preloadFiles: LabPreloadFile[];
+  startupCommand: string | null;
+  networkEnabled: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LabListItem {
+  id: string;
+  labId: string;
+  name: string;
+  dockerImage: string;
+  description: string;
+  resources: LabResources;
+  isActive: boolean;
+  lessonsUsingLab?: number;
 }

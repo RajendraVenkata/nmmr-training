@@ -75,7 +75,7 @@ export default function CoursePage() {
   return (
     <div>
       {/* Hero section */}
-      <section className="border-b bg-muted/30">
+      <section className="bg-muted/30">
         <div className="container mx-auto px-4 py-12">
           <Link
             href="/courses"
@@ -125,17 +125,24 @@ export default function CoursePage() {
 
             {/* Pricing card */}
             <div className="lg:col-span-1">
-              <div className="rounded-lg border bg-card p-6 shadow-sm sticky top-20">
+              <div className="rounded-2xl border border-border/60 bg-card p-6 sticky top-20">
                 <div className="text-center mb-4">
                   <span className="text-3xl font-bold">
                     {course.price === 0 ? (
-                      <span className="text-green-600 dark:text-green-400">
+                      <span className="text-green-600">
                         Free
                       </span>
                     ) : (
                       formatPrice(course.price, course.currency)
                     )}
                   </span>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {course.difficulty === "beginner"
+                      ? "All 10 beginner courses included"
+                      : course.difficulty === "intermediate"
+                        ? "Access all 10 intermediate courses"
+                        : "Access all 13 advanced courses"}
+                  </p>
                 </div>
 
                 <EnrollButton

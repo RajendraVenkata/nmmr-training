@@ -1,11 +1,11 @@
 import type { QuizData } from "@/types";
 
 export const sampleQuizzes: Record<string, QuizData> = {
-  // l4: Quiz: AI Fundamentals (Course 1, Module 1)
-  l4: {
+  // B1 — AI Foundations Quiz (placed on a conceptual lesson in Module B1.4)
+  l32: {
     title: "AI Fundamentals Quiz",
     description:
-      "Test your understanding of core Generative AI concepts covered in Module 1.",
+      "Test your understanding of core AI and LLM concepts covered in Foundations of AI & LLMs.",
     passingScore: 70,
     shuffleQuestions: false,
     questions: [
@@ -15,7 +15,7 @@ export const sampleQuizzes: Record<string, QuizData> = {
         questionType: "multiple-choice",
         options: [
           { text: "A database for storing language data", isCorrect: false, order: 0 },
-          { text: "A neural network trained on vast amounts of text data", isCorrect: true, order: 1 },
+          { text: "A neural network trained on vast amounts of text data that generates human-like text", isCorrect: true, order: 1 },
           { text: "A programming language for AI", isCorrect: false, order: 2 },
           { text: "A type of computer hardware", isCorrect: false, order: 3 },
         ],
@@ -25,29 +25,17 @@ export const sampleQuizzes: Record<string, QuizData> = {
       },
       {
         questionText:
-          "Which of the following are phases of LLM training?",
-        questionType: "multi-select",
+          "What does the 'context window' of an LLM refer to?",
+        questionType: "multiple-choice",
         options: [
-          { text: "Pre-training", isCorrect: true, order: 0 },
-          { text: "Fine-tuning", isCorrect: true, order: 1 },
-          { text: "Compiling", isCorrect: false, order: 2 },
-          { text: "Indexing", isCorrect: false, order: 3 },
+          { text: "The screen where you type prompts", isCorrect: false, order: 0 },
+          { text: "The maximum amount of text (tokens) a model can process at once", isCorrect: true, order: 1 },
+          { text: "The time limit for each API call", isCorrect: false, order: 2 },
+          { text: "The number of users who can access it simultaneously", isCorrect: false, order: 3 },
         ],
         explanation:
-          "LLMs are trained in two main phases: pre-training (learning from large text corpora) and fine-tuning (refining for specific tasks).",
+          "The context window is the maximum number of tokens the model can process in a single request, including both input and output. Modern models range from 4K to over 1M tokens.",
         order: 1,
-      },
-      {
-        questionText:
-          "A 'token' in the context of LLMs is the basic unit of text that models process.",
-        questionType: "true-false",
-        options: [
-          { text: "True", isCorrect: true, order: 0 },
-          { text: "False", isCorrect: false, order: 1 },
-        ],
-        explanation:
-          "Correct! Tokens are the fundamental building blocks. They can be words, subwords, or characters depending on the tokenization method.",
-        order: 2,
       },
       {
         questionText:
@@ -60,21 +48,33 @@ export const sampleQuizzes: Record<string, QuizData> = {
           { text: "The accuracy of facts", isCorrect: false, order: 3 },
         ],
         explanation:
-          "Temperature controls randomness: lower values (e.g., 0.1) produce more deterministic output, while higher values (e.g., 1.0) produce more creative/varied responses.",
+          "Temperature controls randomness: 0.0 produces deterministic output, while higher values (e.g., 1.0+) produce more creative and varied responses.",
+        order: 2,
+      },
+      {
+        questionText:
+          "Which of the following are components of the ReAct agent pattern?",
+        questionType: "multi-select",
+        options: [
+          { text: "Thought (reasoning about the next step)", isCorrect: true, order: 0 },
+          { text: "Action (calling a tool)", isCorrect: true, order: 1 },
+          { text: "Observation (receiving tool results)", isCorrect: true, order: 2 },
+          { text: "Compilation (building the code)", isCorrect: false, order: 3 },
+        ],
+        explanation:
+          "The ReAct pattern interleaves Thought → Action → Observation in a loop until the agent reaches a final answer.",
         order: 3,
       },
       {
         questionText:
-          "What is the 'context window' of an LLM?",
-        questionType: "multiple-choice",
+          "RAG (Retrieval Augmented Generation) allows LLMs to answer questions using your private data without retraining the model.",
+        questionType: "true-false",
         options: [
-          { text: "The screen where you type prompts", isCorrect: false, order: 0 },
-          { text: "The maximum amount of text a model can process at once", isCorrect: true, order: 1 },
-          { text: "The time limit for each API call", isCorrect: false, order: 2 },
-          { text: "The number of users who can access it simultaneously", isCorrect: false, order: 3 },
+          { text: "True", isCorrect: true, order: 0 },
+          { text: "False", isCorrect: false, order: 1 },
         ],
         explanation:
-          "The context window is the maximum number of tokens the model can process in a single request, including both input and output.",
+          "Correct! RAG retrieves relevant documents at query time and includes them in the prompt, allowing the LLM to answer based on your data without fine-tuning.",
         order: 4,
       },
     ],
