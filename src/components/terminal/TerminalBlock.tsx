@@ -1,18 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { Terminal, Maximize2, Minimize2 } from "lucide-react";
+import { Terminal, Maximize2, Minimize2, X } from "lucide-react";
 import { TerminalWidget } from "./TerminalWidget";
 import { cn } from "@/lib/utils";
+
+type TerminalMode = "bottom" | "popup";
 
 interface TerminalBlockProps {
   labId: string;
   courseId: string;
   token: string;
   duration?: number; // in minutes
+  mode?: TerminalMode; // "bottom" (default) or "popup"
+  onClose?: () => void; // callback when popup is closed
 }
 
-export function TerminalBlock({ labId, courseId, token, duration }: TerminalBlockProps) {
+export function TerminalBlock({
+  labId,
+  courseId,
+  token,
+  duration,
+  mode = "bottom",
+  onClose,
+}: TerminalBlockProps) {
   const [expanded, setExpanded] = useState(false);
   const [started, setStarted] = useState(false);
 
@@ -20,7 +31,7 @@ export function TerminalBlock({ labId, courseId, token, duration }: TerminalBloc
 
   if (!terminalEnabled) {
     return (
-      <div className="my-4 rounded-lg border border-dashed border-muted-foreground/30 p-6 text-center">
+      <div className="rounded-lg border border-dashed border-muted-foreground/30 p-6 text-center">
         <Terminal className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
         <p className="text-sm text-muted-foreground">
           Interactive terminal is not available at this time.
@@ -31,7 +42,7 @@ export function TerminalBlock({ labId, courseId, token, duration }: TerminalBloc
 
   if (!started) {
     return (
-      <div className="my-4 rounded-lg border border-[#313244] bg-[#1e1e2e] p-6">
+      <div className="rounded-lg border border-[#313244] bg-[#1e1e2e] p-6">
         <div className="flex flex-col items-center gap-3 text-center">
           <Terminal className="h-10 w-10 text-[#94e2d5]" />
           <div>
@@ -53,10 +64,63 @@ export function TerminalBlock({ labId, courseId, token, duration }: TerminalBloc
     );
   }
 
+  // Popup mode: rendered as a floating overlay
+  if (mode === "popup") {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div
+          className={cn(
+            "rounded-lg border border-[#313244] overflow-hidden bg-[#1e1e2e] flex flex-col",
+            expanded
+              ? "fixed inset-4 z-50"
+              : "w-[90vw] max-w-4xl h-[70vh]"
+          )}
+        >
+          {/* Header bar */}
+          <div className="flex items-center justify-between px-3 py-1.5 bg-[#181825] border-b border-[#313244]">
+            <div className="flex items-center gap-2 text-xs text-[#a6adc8]">
+              <Terminal className="h-3.5 w-3.5" />
+              <span>{labId}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="text-[#a6adc8] hover:text-[#cdd6f4] transition-colors p-1"
+              >
+                {expanded ? (
+                  <Minimize2 className="h-3.5 w-3.5" />
+                ) : (
+                  <Maximize2 className="h-3.5 w-3.5" />
+                )}
+              </button>
+              <button
+                onClick={onClose}
+                className="text-[#a6adc8] hover:text-[#f38ba8] transition-colors p-1"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Terminal */}
+          <div className="flex-1 p-2">
+            <TerminalWidget
+              labId={labId}
+              courseId={courseId}
+              token={token}
+              timeoutMs={duration ? duration * 60 * 1000 : undefined}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Bottom mode (default): rendered inline at the bottom
   return (
     <div
       className={cn(
-        "my-4 rounded-lg border border-[#313244] overflow-hidden",
+        "rounded-lg border border-[#313244] overflow-hidden",
         expanded && "fixed inset-4 z-50 bg-[#1e1e2e] flex flex-col"
       )}
     >

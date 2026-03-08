@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Terminal,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -110,8 +111,32 @@ function MarkdownSection({ content }: { content: string }) {
 }
 
 /**
- * Renders markdown content, splitting on :::terminal labId::: blocks
- * and rendering TerminalBlock components inline.
+ * Parses :::terminal labId [duration]::: blocks from markdown content.
+ * Returns the cleaned markdown (without terminal markers) and terminal definitions.
+ */
+function parseTerminalBlocks(content: string) {
+  const terminalRegex = /:::terminal\s+([\w-]+)(?:\s+(\d+))?\s*:::/g;
+  const terminals: Array<{ labId: string; duration?: number }> = [];
+
+  // Extract terminal definitions
+  let match;
+  while ((match = terminalRegex.exec(content)) !== null) {
+    terminals.push({
+      labId: match[1],
+      duration: match[2] ? parseInt(match[2], 10) : undefined,
+    });
+  }
+
+  // Strip terminal markers from markdown
+  const cleanedMarkdown = content.replace(terminalRegex, "").trim();
+
+  return { cleanedMarkdown, terminals };
+}
+
+/**
+ * Renders markdown content with terminals at the bottom.
+ * Terminal blocks are extracted from the content and rendered after all markdown.
+ * A floating button allows opening the terminal as a popup overlay.
  */
 function MarkdownContent({
   content,
@@ -122,61 +147,56 @@ function MarkdownContent({
   courseId: string;
   token: string;
 }) {
-  // Split content on :::terminal <labId> [duration]:::: blocks
-  // duration is optional, in minutes (e.g. :::terminal python-basics 15:::)
-  const terminalRegex = /:::terminal\s+([\w-]+)(?:\s+(\d+))?\s*:::/g;
-  const parts: Array<{
-    type: "markdown" | "terminal";
-    content: string;
+  const [popupTerminal, setPopupTerminal] = useState<{
+    labId: string;
     duration?: number;
-  }> = [];
-  let lastIndex = 0;
+  } | null>(null);
 
-  let match;
-  while ((match = terminalRegex.exec(content)) !== null) {
-    // Add markdown before the terminal block
-    if (match.index > lastIndex) {
-      const mdContent = content.substring(lastIndex, match.index).trim();
-      if (mdContent) {
-        parts.push({ type: "markdown", content: mdContent });
-      }
-    }
-    // Add terminal block with optional duration
-    parts.push({
-      type: "terminal",
-      content: match[1],
-      duration: match[2] ? parseInt(match[2], 10) : undefined,
-    });
-    lastIndex = match.index + match[0].length;
-  }
+  const { cleanedMarkdown, terminals } = parseTerminalBlocks(content);
 
-  // Add remaining markdown after last terminal block
-  if (lastIndex < content.length) {
-    const remaining = content.substring(lastIndex).trim();
-    if (remaining) {
-      parts.push({ type: "markdown", content: remaining });
-    }
-  }
-
-  // If no terminal blocks found, render plain markdown
-  if (parts.length === 0) {
-    return <MarkdownSection content={content} />;
+  // No terminal blocks — just render markdown
+  if (terminals.length === 0) {
+    return <MarkdownSection content={cleanedMarkdown} />;
   }
 
   return (
     <div className="space-y-4">
-      {parts.map((part, index) =>
-        part.type === "terminal" ? (
+      {/* Markdown content */}
+      <MarkdownSection content={cleanedMarkdown} />
+
+      {/* Terminal(s) fixed at the bottom */}
+      <div className="space-y-4 pt-4 border-t border-[#313244]">
+        {terminals.map((term, index) => (
           <TerminalBlock
             key={`terminal-${index}`}
-            labId={part.content}
+            labId={term.labId}
             courseId={courseId}
             token={token}
-            duration={part.duration}
+            duration={term.duration}
+            mode="bottom"
           />
-        ) : (
-          <MarkdownSection key={`md-${index}`} content={part.content} />
-        )
+        ))}
+      </div>
+
+      {/* Floating popup button */}
+      <button
+        onClick={() => setPopupTerminal(terminals[0])}
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#94e2d5] hover:bg-[#a6e3a1] text-[#1e1e2e] font-medium text-sm shadow-lg transition-colors"
+      >
+        <Terminal className="h-4 w-4" />
+        Terminal
+      </button>
+
+      {/* Popup terminal overlay */}
+      {popupTerminal && (
+        <TerminalBlock
+          labId={popupTerminal.labId}
+          courseId={courseId}
+          token={token}
+          duration={popupTerminal.duration}
+          mode="popup"
+          onClose={() => setPopupTerminal(null)}
+        />
       )}
     </div>
   );
