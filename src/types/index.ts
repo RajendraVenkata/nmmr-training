@@ -26,12 +26,12 @@ export type LessonType = "markdown" | "document" | "quiz" | "image";
 export type QuestionType = "multiple-choice" | "multi-select" | "true-false";
 export type ImagePurpose = "thumbnail" | "banner" | "inline" | "instructor";
 export type CourseCategory =
-  | "GenAI"
-  | "Agentic AI"
+  | "AI Foundations"
+  | "LLM Providers"
   | "Prompt Engineering"
-  | "AI Development"
-  | "AI Consulting"
-  | "Machine Learning";
+  | "Agentic AI"
+  | "RAG & Retrieval"
+  | "Cloud & Production";
 
 export interface Lesson {
   id: string;
