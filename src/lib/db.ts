@@ -29,10 +29,12 @@ export async function connectDB() {
     throw new Error("Please define the DATABASE_URL environment variable");
   }
 
+  const dbName = process.env.DB_NAME || "nmmr-training";
+
   if (!cached.promise) {
     cached.promise = mongoose
       .connect(MONGODB_URI, {
-        dbName: "nmmr-training",
+        dbName,
         retryWrites: false,
       })
       .then((m) => m)
