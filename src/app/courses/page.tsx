@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
+import { BookOpen, GraduationCap, Rocket } from "lucide-react";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { CourseSearch } from "@/components/courses/CourseSearch";
 import { CourseFilters } from "@/components/courses/CourseFilters";
+import { formatPrice } from "@/lib/utils";
 import type { PublicCourseItem } from "@/types";
 
 export default function CoursesPage() {
@@ -81,6 +83,28 @@ export default function CoursesPage() {
         title="Browse Courses"
         subtitle="Explore our training catalog and find the right course for your learning goals."
       />
+
+      {/* Pricing Tiers */}
+      <div className="grid gap-4 sm:grid-cols-3 mb-10">
+        <div className="rounded-xl border bg-green-50 dark:bg-green-950/30 p-5 text-center">
+          <BookOpen className="h-6 w-6 mx-auto mb-2 text-green-600" />
+          <h3 className="font-semibold text-lg">Beginner</h3>
+          <p className="text-sm text-muted-foreground mb-1">10 courses · B1–B10</p>
+          <p className="text-2xl font-bold text-green-600">Free</p>
+        </div>
+        <div className="rounded-xl border bg-amber-50 dark:bg-amber-950/30 p-5 text-center">
+          <GraduationCap className="h-6 w-6 mx-auto mb-2 text-amber-600" />
+          <h3 className="font-semibold text-lg">Intermediate</h3>
+          <p className="text-sm text-muted-foreground mb-1">10 courses · I1–I10</p>
+          <p className="text-2xl font-bold">{formatPrice(4999, "INR")}</p>
+        </div>
+        <div className="rounded-xl border bg-red-50 dark:bg-red-950/30 p-5 text-center">
+          <Rocket className="h-6 w-6 mx-auto mb-2 text-red-600" />
+          <h3 className="font-semibold text-lg">Advanced</h3>
+          <p className="text-sm text-muted-foreground mb-1">13 courses · A1–A13</p>
+          <p className="text-2xl font-bold">{formatPrice(7999, "INR")}</p>
+        </div>
+      </div>
 
       <div className="mb-8 space-y-4">
         <CourseSearch value={searchQuery} onChange={setSearchQuery} />

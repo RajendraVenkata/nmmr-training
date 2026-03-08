@@ -136,6 +136,13 @@ export default function CoursePage() {
                       formatPrice(course.price, course.currency)
                     )}
                   </span>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {course.difficulty === "beginner"
+                      ? "All 10 beginner courses included"
+                      : course.difficulty === "intermediate"
+                        ? "Access all 10 intermediate courses"
+                        : "Access all 13 advanced courses"}
+                  </p>
                 </div>
 
                 <EnrollButton
