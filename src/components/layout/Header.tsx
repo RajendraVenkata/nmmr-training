@@ -132,9 +132,17 @@ export function Header() {
           ) : (
             /* Guest auth buttons (desktop) */
             <div className="hidden md:flex items-center gap-3">
-              <Button size="sm" asChild>
-                <Link href="/login">Log in</Link>
-              </Button>
+              <Link
+                href="/login"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Log in
+              </Link>
+              {process.env.NEXT_PUBLIC_REGISTRATION_ENABLED === "true" && (
+                <Button size="sm" asChild>
+                  <Link href="/register">Try now</Link>
+                </Button>
+              )}
             </div>
           )}
 

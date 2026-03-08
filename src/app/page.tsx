@@ -117,6 +117,10 @@ export default async function Home() {
                 <Button size="lg" variant="outline" asChild>
                   <Link href="/dashboard">Go to Dashboard</Link>
                 </Button>
+              ) : process.env.NEXT_PUBLIC_REGISTRATION_ENABLED === "true" ? (
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/register">Create Account</Link>
+                </Button>
               ) : (
                 <Button size="lg" variant="outline" asChild>
                   <Link href="/login">Sign In</Link>
@@ -184,13 +188,23 @@ export default async function Home() {
             </h2>
             <p className="mt-4 text-base text-muted-foreground">
               Join our platform and gain the AI skills that companies are hiring
-              for. Start your learning journey today.
+              for.{" "}
+              {process.env.NEXT_PUBLIC_REGISTRATION_ENABLED === "true"
+                ? "Start with a free account today."
+                : "Start your learning journey today."}
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
               {session ? (
                 <Button size="lg" asChild>
                   <Link href="/dashboard">
                     Go to Dashboard
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              ) : process.env.NEXT_PUBLIC_REGISTRATION_ENABLED === "true" ? (
+                <Button size="lg" asChild>
+                  <Link href="/register">
+                    Get Started Free
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
