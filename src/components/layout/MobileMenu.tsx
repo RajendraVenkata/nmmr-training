@@ -113,14 +113,9 @@ export function MobileMenu() {
           </div>
         ) : (
           <div className="flex flex-col gap-2 px-3">
-            <Button variant="outline" asChild className="w-full">
-              <Link href="/login" onClick={() => setOpen(false)}>
-                Login
-              </Link>
-            </Button>
             <Button asChild className="w-full">
-              <Link href="/register" onClick={() => setOpen(false)}>
-                Get Started
+              <Link href="/login" onClick={() => setOpen(false)}>
+                Log in
               </Link>
             </Button>
           </div>

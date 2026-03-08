@@ -119,7 +119,7 @@ export default async function Home() {
                 </Button>
               ) : (
                 <Button size="lg" variant="outline" asChild>
-                  <Link href="/register">Create Free Account</Link>
+                  <Link href="/login">Sign In</Link>
                 </Button>
               )}
             </div>
@@ -184,7 +184,7 @@ export default async function Home() {
             </h2>
             <p className="mt-4 text-base text-muted-foreground">
               Join our platform and gain the AI skills that companies are hiring
-              for. Start with a free account today.
+              for. Start your learning journey today.
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
               {session ? (
@@ -196,8 +196,8 @@ export default async function Home() {
                 </Button>
               ) : (
                 <Button size="lg" asChild>
-                  <Link href="/register">
-                    Get Started Free
+                  <Link href="/courses">
+                    Browse Courses
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
